@@ -7,7 +7,8 @@ Build-Depends: debhelper (>= 9),
                golang-go,
                golang-websocket-dev,
                golang-github-lxc-lxd-dev,
-               golang-github-pborman-uuid-dev
+               golang-github-pborman-uuid-dev,
+               golang-yaml.v2-dev,
 Standards-Version: 3.9.6
 Homepage: https://launchpad.net/ubuntu-sdk-tools
 Vcs-Browser: https://bazaar.launchpad.net/~ubuntu-sdk-team/ubuntu-sdk-tools/trunk/files
