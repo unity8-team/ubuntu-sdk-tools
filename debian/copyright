@@ -1,0 +1,15 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: ubuntu-sdk-tools
+Source: https://github.com/bzeller/ubuntu-sdk-tools
+
+Files: *
+Copyright: 2016 
+License: GPL-3.0
+
+Files: debian/*
+Copyright: 2016 Benjamin Zeller <benjamin.zeller@canonical.com>
+License: GPL-3.0
+Comment: Debian packaging is licensed under the same terms as upstream
+
+License: GPL-3.0
+TODO
