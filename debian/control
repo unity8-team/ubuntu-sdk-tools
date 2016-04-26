@@ -21,4 +21,10 @@ Built-Using: ${misc:Built-Using}
 Depends: ${shlibs:Depends},
          ${misc:Depends}
 Description: 
- TODO: long description
+ Ubuntu SDK CLI tools to control build targets
+
+Package: golang-launchpad-ubuntu-sdk-tools-dev
+Architecture: all
+Depends: golang-go, pkg-config, ${misc:Depends}, ${shlibs:Depends}
+Description: Ubuntu SDK CLI tools - go source
+
