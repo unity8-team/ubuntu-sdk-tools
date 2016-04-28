@@ -14,11 +14,11 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pborman/uuid"
 	"path"
+	"launchpad.net/ubuntu-sdk-tools"
 )
 
 var container string
 var configPath string
-var _find_unsafe = regexp.MustCompile("[^\\w@%+=:,./-]")
 
 func mapAndWrite (line *bytes.Buffer, out io.WriteCloser) {
 	paths := []string{"var","bin","boot","dev","etc","lib","lib64","media","mnt","opt","proc","root","run","sbin","srv","sys","usr"}
@@ -30,22 +30,7 @@ func mapAndWrite (line *bytes.Buffer, out io.WriteCloser) {
 	out.Write([]byte(in))
 }
 
-func quoteString (s string) string{
-	//Return a shell-escaped version of the string *s*.
-	if len(s) == 0 {
-		return "''"
-	}
 
-	if !_find_unsafe.MatchString(s) {
-		return s
-	}
-
-
-	// use single quotes, and put single quotes into double quotes
-	// the string $'b is then quoted as '$'"'"'b'
-
-	return "'" + strings.Replace(s, "'", "'\"'\"'", -1) + "'"
-}
 
 func mapFunc (in *io.PipeReader, output io.WriteCloser) {
 	readBuf := make([]byte, 1)
@@ -80,15 +65,10 @@ func main()  {
 	}
 	configPath = os.ExpandEnv(path.Join(configDir, "config.yml"))
 
-	config, err := lxd.LoadConfig(configPath)
-	if err != nil {
-		print("Could not load LXC config")
-		os.Exit(1)
-	}
-
+	config := ubuntu_sdk_tools.GetConfigOrDie()
 	cl, err := lxd.NewClient(config, "local")
 	if err != nil {
-		print("Could not connect to the LXD server")
+		fmt.Fprintf(os.Stderr, "Could not connect to the LXD server")
 		os.Exit(1)
 	}
 
@@ -96,7 +76,7 @@ func main()  {
 	//the parent directories name is supposed to be named like it
 	toolpath,err := filepath.Abs(os.Args[0])
 	if err != nil {
-		print("Could not resolve the absolute pathname of the tool")
+		fmt.Fprintf(os.Stderr, "Could not resolve the absolute pathname of the tool")
 		os.Exit(1)
 	}
 
@@ -105,7 +85,7 @@ func main()  {
 	//we mirror the current user into the LXD container
 	user, err := user.Current()
 	if err != nil {
-		print("Could not resolve the current user name")
+		fmt.Fprintf(os.Stderr, "Could not resolve the current user name")
 		os.Exit(1)
 	}
 
@@ -136,7 +116,7 @@ func main()  {
 	program +=" LC_ALL=C exec"
 
 	for _,arg := range args {
-		program += " "+quoteString(arg)
+		program += " "+ubuntu_sdk_tools.QuoteString(arg)
 	}
 
 	stdout_r, stdout_w := io.Pipe()

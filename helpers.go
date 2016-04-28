@@ -1,0 +1,153 @@
+package ubuntu_sdk_tools
+
+import (
+	"github.com/lxc/lxd"
+	"path"
+	"os"
+	"github.com/lxc/lxd/shared"
+	"fmt"
+	"log"
+	"os/exec"
+)
+
+var globConfig *lxd.Config = nil
+
+func EnsureLXDInitializedOrDie() {
+	config := GetConfigOrDie()
+	client, err := lxd.NewClient(config, config.DefaultRemote)
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Could not connect to LXD. Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	/*[26.04 16:33:38] <stgraber> zbenjamin: ok, so about that user.network_mode key.
+	 You may want to query it twice if it's the first LXD query you do as user.network_mode
+	 is set by the init script right after LXD startup, which means that you may be getting the previous (unset)
+	 value if your query is the one which starts LXD.*/
+	_, _ = client.GetProfileConfig("default")
+	defaultProfile, err := client.GetProfileConfig("default")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Could not query status from LXD. Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	//check if network mode is there and if it is that its not link-local
+	networkMode, ok := defaultProfile["user.network_mode"]
+	if ok {
+		if networkMode == "link-local" {
+			fmt.Fprintf(os.Stderr, "LXD is not set up correctly, please run lxd init to configure a subnet")
+			os.Exit(1)
+		}
+	}
+
+
+	//if we reached this place lets register a new remote
+	defaultImageRemote := "https://sdk-images.canonical.com"
+	defaultRemoteName  := "ubuntu-sdk-images"
+	remotes := config.Remotes
+	sdkRem, ok := remotes[defaultRemoteName]
+	if ok {
+		if sdkRem.Addr == defaultImageRemote {
+			return
+		} else {
+			cmd := exec.Command("lxc", "remote", "remove", defaultRemoteName)
+			err = cmd.Run()
+			if (err != nil) {
+				fmt.Fprintf(os.Stderr, "Could not remove the remote "+defaultRemoteName+". error: %v\n", err)
+				fmt.Fprintf(os.Stderr, "Please remove it manually.\n", err)
+				os.Exit(1)
+			}
+		}
+	}
+
+	cmd := exec.Command("lxc", "remote", "add", "ubuntu-sdk-images", defaultImageRemote, "--accept-certificate", "--protocol=simplestreams")
+	err = cmd.Run()
+	if (err != nil) {
+		fmt.Fprintf(os.Stderr, "Could not register remote. error: %v\n", err)
+		os.Exit(1)
+	}
+
+	//make sure config is loaded again
+	globConfig = nil
+}
+
+func GetConfigOrDie ()  (*lxd.Config) {
+
+	if globConfig != nil {
+		return globConfig
+	}
+
+	configDir := "$HOME/.config/lxc"
+	if os.Getenv("LXD_CONF") != "" {
+		configDir = os.Getenv("LXD_CONF")
+	}
+	configPath := os.ExpandEnv(path.Join(configDir, "config.yml"))
+
+	globConfig, err := lxd.LoadConfig(configPath)
+	if err != nil {
+		log.Fatal("Could not load LXC config")
+	}
+
+	certf := globConfig.ConfigPath("client.crt")
+	keyf := globConfig.ConfigPath("client.key")
+
+	if !shared.PathExists(certf) || !shared.PathExists(keyf) {
+		fmt.Fprintf(os.Stderr, "Generating a client certificate. This may take a minute...\n")
+
+		err = shared.FindOrGenCert(certf, keyf)
+		if err != nil {
+			log.Fatal("Could not generate client certificates.\n")
+			os.Exit(1)
+		}
+
+		if shared.PathExists("/var/lib/lxd/") {
+			fmt.Fprintf(os.Stderr, "If this is your first time using LXD, you should also run: sudo lxd init\n\n")
+		}
+	}
+
+	return globConfig
+}
+
+func BootContainerSync (client *lxd.Client, name string) error {
+	current, err := client.ContainerInfo(name)
+	if err != nil {
+		return err
+	}
+
+	action := shared.Start
+
+	// "start" for a frozen container means "unfreeze"
+	if current.StatusCode == shared.Frozen {
+		action = shared.Unfreeze
+	}
+
+
+	resp, err := client.Action(name, action, 10, false, false)
+	if err != nil {
+		return err
+	}
+
+	if resp.Type != lxd.Async {
+		return fmt.Errorf("bad result type from action")
+	}
+
+	if err := client.WaitForSuccess(resp.Operation); err != nil {
+		return fmt.Errorf("%s\nTry `lxc info --show-log %s` for more info", err, name)
+	}
+	return nil
+}
+
+func AddDeviceSync (client *lxd.Client, container, devname, devtype string, props []string) error{
+	fmt.Printf("Adding device %s\n",devname)
+	resp, err := client.ContainerDeviceAdd(container, devname, devtype, props)
+	if err != nil {
+		return err
+	}
+
+	err = client.WaitForSuccess(resp.Operation)
+	if err == nil {
+		fmt.Printf("Device %s added to %s\n", devname, container)
+	}
+	return err
+}
