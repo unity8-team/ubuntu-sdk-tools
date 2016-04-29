@@ -43,7 +43,6 @@ func (c *rootfsCmd) run(args []string) error {
 		os.Exit(1)
 	}
 	fmt.Printf(ContainerRootfs(args[0])+"\n")
-
 	return nil
 }
 

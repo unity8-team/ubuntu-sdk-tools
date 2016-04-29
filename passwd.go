@@ -28,16 +28,12 @@ package ubuntu_sdk_tools
 #include <stdio.h>
 #include <shadow.h>
 
-size_t groupMemberCount (struct group *grp)
+char *getGrpMember (struct group *grp, size_t index)
 {
-    if (grp == NULL) return 0;
-    size_t idx = 0;
-    while (1) {
-    	if(grp->gr_mem[idx] == NULL)
-    	    break;
-         idx++;
-    }
-    return idx;
+    if (grp == NULL) return NULL;
+    if (grp->gr_mem[index] == NULL)
+    	    return NULL;
+    return grp->gr_mem[index];
 }
 
 */
@@ -128,11 +124,14 @@ func GetGroups() ([]GroupEntry, error){
 		currEntry.Gid = uint32(result.gr_gid)
 		currEntry.Name = C.GoString(result.gr_name)
 
-		groupMemberCnt := C.groupMemberCount(result)
-		memberList := ((*[1 << 30]*C.char)(unsafe.Pointer(result.gr_mem)))[:groupMemberCnt]
-
-		for _, val := range memberList {
-			currEntry.Members = append(currEntry.Members, C.GoString(val))
+		idx := 0
+		for {
+			cMember := C.getGrpMember(result, C.size_t(idx))
+			if cMember == nil {
+				break
+			}
+			currEntry.Members = append(currEntry.Members, C.GoString(cMember))
+			idx++
 		}
 		allGroups = append(allGroups, currEntry)
 	}
