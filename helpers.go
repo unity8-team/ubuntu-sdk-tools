@@ -1,10 +1,27 @@
+/*
+ * Copyright (C) 2016 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Author: Benjamin Zeller <benjamin.zeller@canonical.com>
+ */
 package ubuntu_sdk_tools
 
 import (
 	"github.com/lxc/lxd"
+	"github.com/lxc/lxd/shared"
 	"path"
 	"os"
-	"github.com/lxc/lxd/shared"
 	"fmt"
 	"log"
 	"os/exec"
@@ -117,6 +134,10 @@ func BootContainerSync (client *lxd.Client, name string) error {
 
 	action := shared.Start
 
+	if current.StatusCode == shared.Running {
+		return nil
+	}
+
 	// "start" for a frozen container means "unfreeze"
 	if current.StatusCode == shared.Frozen {
 		action = shared.Unfreeze
@@ -150,4 +171,38 @@ func AddDeviceSync (client *lxd.Client, container, devname, devtype string, prop
 		fmt.Printf("Device %s added to %s\n", devname, container)
 	}
 	return err
+}
+
+func RemoveContainerSync(client *lxd.Client, container string) (error){
+	ct, err := client.ContainerInfo(container)
+	if err != nil {
+		return err
+	}
+
+	if ct.StatusCode != 0 && ct.StatusCode != shared.Stopped {
+		resp, err := client.Action(container, shared.Stop, -1, true, false)
+		if err != nil {
+			return err
+		}
+
+		op, err := client.WaitFor(resp.Operation)
+		if err != nil {
+			return err
+		}
+
+		if op.StatusCode == shared.Failure {
+			return fmt.Errorf("Stopping container failed!")
+		}
+
+		if ct.Ephemeral == true {
+			return nil
+		}
+	}
+
+	resp, err := client.Delete(container)
+	if err != nil {
+		return err
+	}
+
+	return client.WaitForSuccess(resp.Operation)
 }

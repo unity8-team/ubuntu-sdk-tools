@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2016 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Author: Benjamin Zeller <benjamin.zeller@canonical.com>
+ */
 package main
 import (
 	"github.com/lxc/lxd"
@@ -5,20 +22,16 @@ import (
 	"io"
 	"bytes"
 	"regexp"
-	"strings"
 	"fmt"
 	"path/filepath"
 	"os/user"
 	"os/signal"
 	"syscall"
-	"github.com/gorilla/websocket"
 	"github.com/pborman/uuid"
-	"path"
 	"launchpad.net/ubuntu-sdk-tools"
 )
 
 var container string
-var configPath string
 
 func mapAndWrite (line *bytes.Buffer, out io.WriteCloser) {
 	paths := []string{"var","bin","boot","dev","etc","lib","lib64","media","mnt","opt","proc","root","run","sbin","srv","sys","usr"}
@@ -29,8 +42,6 @@ func mapAndWrite (line *bytes.Buffer, out io.WriteCloser) {
 	}
 	out.Write([]byte(in))
 }
-
-
 
 func mapFunc (in *io.PipeReader, output io.WriteCloser) {
 	readBuf := make([]byte, 1)
@@ -58,13 +69,6 @@ func mapFunc (in *io.PipeReader, output io.WriteCloser) {
 }
 
 func main()  {
-
-	configDir := "$HOME/.config/lxc"
-	if os.Getenv("LXD_CONF") != "" {
-		configDir = os.Getenv("LXD_CONF")
-	}
-	configPath = os.ExpandEnv(path.Join(configDir, "config.yml"))
-
 	config := ubuntu_sdk_tools.GetConfigOrDie()
 	cl, err := lxd.NewClient(config, "local")
 	if err != nil {
@@ -81,6 +85,12 @@ func main()  {
 	}
 
 	container = filepath.Base(filepath.Dir(toolpath))
+
+	err = ubuntu_sdk_tools.BootContainerSync(cl, container)
+	if (err != nil) {
+		fmt.Fprintf(os.Stderr, "Error while starting the container: %v\n",err)
+		os.Exit(1)
+	}
 
 	//we mirror the current user into the LXD container
 	user, err := user.Current()
@@ -125,7 +135,7 @@ func main()  {
 	go mapFunc(stdout_r, os.Stdout)
 	go mapFunc(stderr_r, os.Stderr)
 
-	controlSocketHandler := func (d *lxd.Client, control *websocket.Conn) {
+	go func () {
 		ch := make(chan os.Signal)
 		signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
 
@@ -134,10 +144,10 @@ func main()  {
 			cl.Exec(container, []string{
 				"/bin/bash",
 				"-c",
-				fmt.Sprintf("kill -%d `cat %s`", sig, pidfile),
+				fmt.Sprintf("kill -%d -$(ps -o pgid= `cat %s` | grep -o '[0-9]*')", sig, pidfile),
 			}, map[string]string{}, os.Stdin, nil, nil, nil, 0, 0)
 		}
-	}
+	} ()
 
 	code, err := cl.Exec(container,
 		[]string{"su", user.Username, "-s", "/bin/bash", "-c", "/bin/bash", "-c", program },
@@ -145,7 +155,7 @@ func main()  {
 		os.Stdin,
 		stdout_w,
 		stderr_w,
-		controlSocketHandler, 0, 0)
+		nil, 0, 0)
 
 	stdout_r.Close()
         stdout_w.Close()

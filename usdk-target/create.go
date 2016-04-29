@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2016 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Author: Benjamin Zeller <benjamin.zeller@canonical.com>
+ */
+
 package main
 
 import (
@@ -37,8 +55,7 @@ func (c *createCmd) flags() {
 	gnuflag.BoolVar(&c.createSupGroups, "g", false, "Also try to create the users supplementary groups")
 }
 
-func (c *createCmd) removeContainerSync(client *lxd.Client, container string) {
-}
+
 
 func (c *createCmd) run(args []string) error {
 	if c.architecture == requiredString || c.framework == requiredString || c.fingerprint == requiredString || c.name == requiredString {
@@ -98,40 +115,40 @@ func (c *createCmd) run(args []string) error {
 
 	fi, err := os.Lstat(rootfs)
 	if err != nil {
-		c.removeContainerSync(client, c.name)
+		ubuntu_sdk_tools.RemoveContainerSync(client, c.name)
 		return fmt.Errorf("Failed to make rootfs readable. error: %v.\n",err)
 	}
 
 	if fi.Mode() & os.ModeSymlink == os.ModeSymlink {
 		rootfs, err = filepath.EvalSymlinks(rootfs)
 		if err != nil {
-			c.removeContainerSync(client, c.name)
+			ubuntu_sdk_tools.RemoveContainerSync(client, c.name)
 			return fmt.Errorf("Failed to make rootfs readable. error: %v.\n",err)
 		}
 	}
 
 	err = os.Chmod(rootfs, 0755)
 	if err != nil {
-		c.removeContainerSync(client, c.name)
+		ubuntu_sdk_tools.RemoveContainerSync(client, c.name)
 		return fmt.Errorf("Failed to make rootfs readable. error: %v.\n",err)
 	}
 
 	//add the required devices
 	err = ubuntu_sdk_tools.AddDeviceSync(client, c.name, "dri", "disk", []string{"source=/dev/dri", "path=/dev/dri"})
 	if err != nil {
-		c.removeContainerSync(client, c.name)
+		ubuntu_sdk_tools.RemoveContainerSync(client, c.name)
 		return err
 	}
 
 	err = ubuntu_sdk_tools.AddDeviceSync(client, c.name, "tmp", "disk", []string{"source=/tmp", "path=/tmp"})
 	if err != nil {
-		c.removeContainerSync(client, c.name)
+		ubuntu_sdk_tools.RemoveContainerSync(client, c.name)
 		return err
 	}
 
 	err = RegisterUserInContainer(client, c.name, nil, c.createSupGroups)
 	if err != nil {
-		c.removeContainerSync(client, c.name)
+		ubuntu_sdk_tools.RemoveContainerSync(client, c.name)
 		return err
 	}
 
