@@ -227,7 +227,7 @@ func GetUserConfirmation(question string) (bool) {
 	ok := false
 	answer := false
 	for !ok {
-		fmt.Println(question+" (yes/no)")
+		fmt.Print(question+" (yes/no): ")
 		_, err := fmt.Scanln(&response)
 		if err != nil {
 			log.Fatal(err)

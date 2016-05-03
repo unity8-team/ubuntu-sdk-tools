@@ -48,7 +48,7 @@ func (c *autosetupCmd) flags() {
 func (c *autosetupCmd) run(args []string) error {
 
 	if (!c.yes) {
-		if(!ubuntu_sdk_tools.GetUserConfirmation("WARNING: This will override existing configurations and restart all your containers, are your sure?")) {
+		if(!ubuntu_sdk_tools.GetUserConfirmation("WARNING: This will override existing bridge configurations and restart all your containers, are your sure?")) {
 			return fmt.Errorf("Cancelled by user.")
 		}
 	}

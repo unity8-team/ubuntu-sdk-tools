@@ -35,11 +35,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="helpers.go" pinned="false" current-in-tab="false">
+      <file leaf-file-name="helpers.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/helpers.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="192" column="39" selection-start-line="192" selection-start-column="39" selection-end-line="192" selection-end-column="39" />
+            <state vertical-scroll-proportion="0.6695464">
+              <caret line="229" column="47" selection-start-line="229" selection-start-column="47" selection-end-line="229" selection-end-column="47" />
               <folding>
                 <element signature="e#715#826#0" expanded="true" />
               </folding>
@@ -93,7 +93,7 @@
         <entry file="file://$PROJECT_DIR$/usdk-target/autosetup.go">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="103" column="31" selection-start-line="103" selection-start-column="31" selection-end-line="103" selection-end-column="31" />
+              <caret line="50" column="102" selection-start-line="50" selection-start-column="102" selection-end-line="50" selection-end-column="102" />
               <folding>
                 <element signature="e#703#903#0" expanded="true" />
               </folding>
@@ -123,10 +123,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="create.go" pinned="false" current-in-tab="true">
+      <file leaf-file-name="create.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/usdk-target/create.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-0.18574513">
+            <state vertical-scroll-proportion="0.0">
               <caret line="142" column="128" selection-start-line="142" selection-start-column="128" selection-end-line="142" selection-end-column="128" />
               <folding />
             </state>
@@ -167,10 +167,10 @@
         <option value="$PROJECT_DIR$/usdk-target/initialized.go" />
         <option value="$PROJECT_DIR$/usdk-target/main.go" />
         <option value="$PROJECT_DIR$/usdk-wrapper/usdk-wrapper.go" />
-        <option value="$PROJECT_DIR$/usdk-target/autosetup.go" />
-        <option value="$PROJECT_DIR$/helpers.go" />
         <option value="$PROJECT_DIR$/usdk-target/register.go" />
         <option value="$PROJECT_DIR$/usdk-target/create.go" />
+        <option value="$PROJECT_DIR$/usdk-target/autosetup.go" />
+        <option value="$PROJECT_DIR$/helpers.go" />
       </list>
     </option>
   </component>
@@ -1028,16 +1028,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/usdk-target/autosetup.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="103" column="31" selection-start-line="103" selection-start-column="31" selection-end-line="103" selection-end-column="31" />
-          <folding>
-            <element signature="e#703#903#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/usdk-target/initialized.go">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -1072,16 +1062,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/helpers.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="192" column="39" selection-start-line="192" selection-start-column="39" selection-end-line="192" selection-end-column="39" />
-          <folding>
-            <element signature="e#715#826#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/usdk-target/register.go">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -1092,9 +1072,29 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/usdk-target/create.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.18574513">
+        <state vertical-scroll-proportion="0.0">
           <caret line="142" column="128" selection-start-line="142" selection-start-column="128" selection-end-line="142" selection-end-column="128" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/usdk-target/autosetup.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="50" column="102" selection-start-line="50" selection-start-column="102" selection-end-line="50" selection-end-column="102" />
+          <folding>
+            <element signature="e#703#903#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/helpers.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.6695464">
+          <caret line="229" column="47" selection-start-line="229" selection-start-column="47" selection-end-line="229" selection-end-column="47" />
+          <folding>
+            <element signature="e#715#826#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
