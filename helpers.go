@@ -25,8 +25,10 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"strings"
 )
 
+const LxdBridgeFile = "/etc/default/lxd-bridge"
 var globConfig *lxd.Config = nil
 
 func EnsureLXDInitializedOrDie() {
@@ -54,7 +56,7 @@ func EnsureLXDInitializedOrDie() {
 	if ok {
 		if networkMode == "link-local" {
 			fmt.Fprintf(os.Stderr, "LXD is not set up correctly, please run lxd init to configure a subnet")
-			os.Exit(1)
+			os.Exit(255)
 		}
 	}
 
@@ -159,6 +161,33 @@ func BootContainerSync (client *lxd.Client, name string) error {
 	return nil
 }
 
+func StopContainerSync  (client *lxd.Client, container string) error {
+	ct, err := client.ContainerInfo(container)
+	if err != nil {
+		return err
+	}
+
+	if ct.StatusCode != 0 && ct.StatusCode != shared.Stopped {
+		resp, err := client.Action(container, shared.Stop, -1, true, false)
+		if err != nil {
+			return err
+		}
+
+		if resp.Type != lxd.Async {
+			return fmt.Errorf("bad result type from action")
+		}
+
+		if err := client.WaitForSuccess(resp.Operation); err != nil {
+			return fmt.Errorf("%s\nTry `lxc info --show-log %s` for more info", err, container)
+		}
+
+		if ct.Ephemeral == true {
+			return nil
+		}
+	}
+	return nil
+}
+
 func AddDeviceSync (client *lxd.Client, container, devname, devtype string, props []string) error{
 	fmt.Printf("Adding device %s\n",devname)
 	resp, err := client.ContainerDeviceAdd(container, devname, devtype, props)
@@ -174,29 +203,10 @@ func AddDeviceSync (client *lxd.Client, container, devname, devtype string, prop
 }
 
 func RemoveContainerSync(client *lxd.Client, container string) (error){
-	ct, err := client.ContainerInfo(container)
+
+	err := StopContainerSync(client, container)
 	if err != nil {
 		return err
-	}
-
-	if ct.StatusCode != 0 && ct.StatusCode != shared.Stopped {
-		resp, err := client.Action(container, shared.Stop, -1, true, false)
-		if err != nil {
-			return err
-		}
-
-		op, err := client.WaitFor(resp.Operation)
-		if err != nil {
-			return err
-		}
-
-		if op.StatusCode == shared.Failure {
-			return fmt.Errorf("Stopping container failed!")
-		}
-
-		if ct.Ephemeral == true {
-			return nil
-		}
 	}
 
 	resp, err := client.Delete(container)
@@ -205,4 +215,27 @@ func RemoveContainerSync(client *lxd.Client, container string) (error){
 	}
 
 	return client.WaitForSuccess(resp.Operation)
+}
+
+func GetUserConfirmation(question string) (bool) {
+	var response string
+	responses := map[string]bool{
+		"y": true, "yes": true,
+		"n": false, "no": false,
+	}
+
+	ok := false
+	answer := false
+	for !ok {
+		fmt.Println(question+" (yes/no)")
+		_, err := fmt.Scanln(&response)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		response = strings.ToLower(response)
+		answer, ok = responses[response]
+	}
+
+	return answer
 }

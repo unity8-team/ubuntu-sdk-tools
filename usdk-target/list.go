@@ -59,6 +59,7 @@ func (c *listCmd) run(args []string) error {
 	clickTargets := []clickContainer{}
 
 	for _, cInfo := range ctslist {
+
 		cConf := cInfo.Config
 		clickArch, ok := cConf["user.click-architecture"]
 		if !ok {

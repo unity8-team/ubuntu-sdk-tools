@@ -1,5 +1,5 @@
-ubuntu-sdk-tools (0.1) UNRELEASED; urgency=medium
+ubuntu-sdk-tools (ubuntu-sdk-tools 0.1ubuntu3) UNRELEASED; urgency=medium
 
-  * Initial release (Closes: TODO)
+  * Initial release
 
  -- Benjamin Zeller <benjamin.zeller@canonical.com>  Mon, 25 Apr 2016 15:13:11 +0200

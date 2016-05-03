@@ -162,12 +162,9 @@ func main()  {
 	stderr_r.Close()
         stderr_w.Close()
 
-	cl.Exec(container, []string{
-			"rm",
-			pidfile,
-		},
-		map[string]string{},
-		os.Stdin, nil, nil, nil, 0, 0)
+	//since the pidfile is created in /tmp and /tmp is mounted into the container
+	//we can just delete the local file
+	err = os.Remove(pidfile)
 
 	if code != 0 {
 		os.Exit(code)

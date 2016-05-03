@@ -49,6 +49,8 @@ var commands = map[string]command{
 	"destroy": &destroyCmd{},
 	"images": &imagesCmd{},
 	"upgrade": &upgradeCmd{},
+	"initialized": &initializedCmd{},
+	"autosetup": &autosetupCmd{},
 }
 
 func main() {
