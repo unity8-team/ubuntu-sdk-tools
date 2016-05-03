@@ -140,7 +140,7 @@ func (c *createCmd) run(args []string) error {
 		return err
 	}
 
-	err = ubuntu_sdk_tools.AddDeviceSync(client, c.name, "tmp", "disk", []string{"source=/tmp", "path=/tmp"})
+	err = ubuntu_sdk_tools.AddDeviceSync(client, c.name, "tmp", "disk", []string{"source=/tmp", "path=/tmp", "recursive=true"})
 	if err != nil {
 		ubuntu_sdk_tools.RemoveContainerSync(client, c.name)
 		return err

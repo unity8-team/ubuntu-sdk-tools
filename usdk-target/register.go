@@ -161,7 +161,7 @@ func RegisterUserInContainer (client *lxd.Client, containerName string, userName
 	err = ubuntu_sdk_tools.AddDeviceSync(client,containerName,
 		fmt.Sprintf("home_of_%s", *userName),
 		"disk",
-		[]string{fmt.Sprintf("source=%s",pw.Dir), fmt.Sprintf("path=%s",pw.Dir)})
+		[]string{fmt.Sprintf("source=%s",pw.Dir), fmt.Sprintf("path=%s",pw.Dir), "recursive=true"})
 	if (err != nil) {
 		return fmt.Errorf("Failed to mount home directory of the user: %s. error: %v", *userName, err)
 	}

@@ -34,6 +34,7 @@
       <root url="file://$PROJECT_DIR$/../../golang.org/x/tools/go/loader/testdata" />
       <root url="file://$PROJECT_DIR$/../../golang.org/x/tools/.git" />
       <root url="file://$PROJECT_DIR$/../../golang.org/x/tools/cmd/stringer/testdata" />
+      <root url="file://$PROJECT_DIR$/../build-area/ubuntu-sdk-tools-0.3/.idea" />
       <root url="file://$PROJECT_DIR$/../../golang.org/x/tools/go/gcimporter15/testdata" />
       <root url="file://$PROJECT_DIR$/../../golang.org/x/tools/go/callgraph/cha/testdata" />
       <root url="file://$PROJECT_DIR$/../../github.com/rogpeppe/godef/.git" />
