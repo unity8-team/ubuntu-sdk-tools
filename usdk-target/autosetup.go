@@ -46,7 +46,9 @@ func (c *autosetupCmd) flags() {
 }
 
 func (c *autosetupCmd) run(args []string) error {
-
+	if os.Getuid() != 0 {
+		return fmt.Errorf("This command needs to run as root")
+	}
 	if (!c.yes) {
 		if(!ubuntu_sdk_tools.GetUserConfirmation("WARNING: This will override existing bridge configurations and restart all your containers, are your sure?")) {
 			return fmt.Errorf("Cancelled by user.")
@@ -90,15 +92,15 @@ func (c *autosetupCmd) run(args []string) error {
 		return err
 	}
 
-	fmt.Print("\nRestarting services .....")
-	cmd := exec.Command("bash", "-c", "service lxd stop && service lxd-bridge stop && service lxd-bridge start && service lxd start")
+	fmt.Println("\nRestarting services:")
+	cmd := exec.Command("bash", "-c", "dpkg-reconfigure -p critical lxd")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
 		return fmt.Errorf("Restarting the LXD service failed. error: %v", err)
 	}
-	fmt.Print(" DONE\n")
+	fmt.Println("..... DONE")
 
 	if len(stoppedContainers) > 0 {
 		fmt.Println("\nStarting previously stopped containers:")

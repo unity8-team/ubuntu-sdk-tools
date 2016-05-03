@@ -39,6 +39,7 @@
       <root url="file://$PROJECT_DIR$/../../github.com/rogpeppe/godef/.git" />
       <root url="file://$PROJECT_DIR$/../../golang.org/x/tools/go/callgraph/rta/testdata" />
       <root url="file://$PROJECT_DIR$/../../golang.org/x/tools/cmd/callgraph/testdata" />
+      <root url="file://$PROJECT_DIR$/../build-area/ubuntu-sdk-tools-0.3/.idea" />
       <root url="file://$PROJECT_DIR$/../../golang.org/x/tools/go/pointer/testdata" />
       <root url="file://$PROJECT_DIR$/../../github.com/pborman/uuid/.git" />
       <root url="file://$PROJECT_DIR$/.idea" />
