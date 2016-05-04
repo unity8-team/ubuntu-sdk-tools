@@ -33,6 +33,8 @@ var globConfig *lxd.Config = nil
 
 func EnsureLXDInitializedOrDie() {
 	config := GetConfigOrDie()
+
+	/*
 	client, err := lxd.NewClient(config, config.DefaultRemote)
 
 	if err != nil {
@@ -43,7 +45,7 @@ func EnsureLXDInitializedOrDie() {
 	/*[26.04 16:33:38] <stgraber> zbenjamin: ok, so about that user.network_mode key.
 	 You may want to query it twice if it's the first LXD query you do as user.network_mode
 	 is set by the init script right after LXD startup, which means that you may be getting the previous (unset)
-	 value if your query is the one which starts LXD.*/
+	 value if your query is the one which starts LXD.
 	_, _ = client.GetProfileConfig("default")
 	defaultProfile, err := client.GetProfileConfig("default")
 	if err != nil {
@@ -59,6 +61,7 @@ func EnsureLXDInitializedOrDie() {
 			os.Exit(255)
 		}
 	}
+	*/
 
 
 	//if we reached this place lets register a new remote
@@ -71,7 +74,7 @@ func EnsureLXDInitializedOrDie() {
 			return
 		} else {
 			cmd := exec.Command("lxc", "remote", "remove", defaultRemoteName)
-			err = cmd.Run()
+			err := cmd.Run()
 			if (err != nil) {
 				fmt.Fprintf(os.Stderr, "Could not remove the remote "+defaultRemoteName+". error: %v\n", err)
 				fmt.Fprintf(os.Stderr, "Please remove it manually.\n", err)
@@ -81,7 +84,7 @@ func EnsureLXDInitializedOrDie() {
 	}
 
 	cmd := exec.Command("lxc", "remote", "add", "ubuntu-sdk-images", defaultImageRemote, "--accept-certificate", "--protocol=simplestreams")
-	err = cmd.Run()
+	err := cmd.Run()
 	if (err != nil) {
 		fmt.Fprintf(os.Stderr, "Could not register remote. error: %v\n", err)
 		os.Exit(1)
