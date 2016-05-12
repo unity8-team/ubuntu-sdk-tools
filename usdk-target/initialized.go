@@ -78,15 +78,17 @@ func (c *initializedCmd) lxdBridgeConfigured () (error) {
 
 		prefix := strings.TrimSpace(dataSet[0])
 		data   := strings.TrimSpace(dataSet[1])
+		data   = strings.Trim(data,"\"")
 
 		_, ok := requiredValues[prefix]
 		if ok {
+			fmt.Printf("Key %v has value %v\n",prefix, data)
 			requiredValues[prefix] = data
 		}
 
 	}
 
-	if requiredValues["USE_LXD_BRIDGE"] != "\"true\"" || requiredValues["LXD_IPV4_ADDR"] == ""{
+	if requiredValues["USE_LXD_BRIDGE"] != "true" || requiredValues["LXD_IPV4_ADDR"] == ""{
 		return fmt.Errorf("lxd-bridge not configured")
 	}
 
