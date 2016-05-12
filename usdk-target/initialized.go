@@ -25,6 +25,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"launchpad.net/ubuntu-sdk-tools"
+	"github.com/lxc/lxd"
 )
 
 type initializedCmd struct {
@@ -44,7 +45,20 @@ func (c *initializedCmd) run(args []string) error {
 	if (err != nil) {
 		return err
 	}
+	fmt.Println("LXD bridge is configured with a subnet.")
 
+	config := ubuntu_sdk_tools.GetConfigOrDie()
+	client, err := lxd.NewClient(config, config.DefaultRemote)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Could not connect to the container backend.\n")
+		os.Exit(255)
+	}
+
+	_, err = client.ServerStatus()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Could not talk to the container backend.\n")
+		os.Exit(255)
+	}
 	fmt.Println("Container backend is ready.")
 	return nil
 }
@@ -82,7 +96,7 @@ func (c *initializedCmd) lxdBridgeConfigured () (error) {
 
 		_, ok := requiredValues[prefix]
 		if ok {
-			fmt.Printf("Key %v has value %v\n",prefix, data)
+			fmt.Printf("Key %v has value \"%v\".\n",prefix, data)
 			requiredValues[prefix] = data
 		}
 
