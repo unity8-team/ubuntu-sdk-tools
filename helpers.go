@@ -14,6 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Benjamin Zeller <benjamin.zeller@canonical.com>
+ *
+ * Based on the LXD lxc client:
+ * Author: Gustavo Niemeyer
+ * Author: Stéphane Graber
+ * Author: Tycho Andersen
+ * Author: Joshua Griffiths
  */
 package ubuntu_sdk_tools
 

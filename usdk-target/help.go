@@ -14,6 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Benjamin Zeller <benjamin.zeller@canonical.com>
+ *
+ * Based on the LXD lxc client:
+ * Author: Gustavo Niemeyer
+ * Author: S.Çağlar Onur
+ * Author: Stéphane Graber
+ * Author: Tycho Andersen
  */
 package main
 
