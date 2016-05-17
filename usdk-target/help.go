@@ -15,7 +15,7 @@
  *
  * Author: Benjamin Zeller <benjamin.zeller@canonical.com>
  *
- * Based on the LXD lxc client:
+ * Based on the LXD lxc client. Copyright holders:
  * Author: Gustavo Niemeyer
  * Author: S.Çağlar Onur
  * Author: Stéphane Graber

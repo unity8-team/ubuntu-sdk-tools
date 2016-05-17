@@ -15,7 +15,7 @@
  *
  * Author: Benjamin Zeller <benjamin.zeller@canonical.com>
  *
- * Based on the LXD lxc client:
+ * Based on the LXD lxc client. Copyright Holders:
  * Author: Michael McCracken
  * Author: René Jochum
  * Author: Serge Hallyn

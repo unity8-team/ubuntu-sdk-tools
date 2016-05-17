@@ -15,7 +15,7 @@
  *
  * Author: Benjamin Zeller <benjamin.zeller@canonical.com>
  *
- * Based on the LXD lxc client:
+ * Based on the LXD lxc client. Copyright holders:
  * Author: Chris Glass
  * Author: Gustavo Niemeyer
  * Author: Jeroen Simonetti
