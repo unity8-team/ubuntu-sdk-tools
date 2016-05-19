@@ -1,0 +1,2 @@
+cp -a debian/control.vivid debian/control
+

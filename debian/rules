@@ -2,14 +2,5 @@
 
 export PYBUILD_NAME=usdk-scope-runner
 
-series ?= $(shell lsb_release -c -s)
-
 %:
 	dh $@ --buildsystem=golang --with=golang,python3 --fail-missing
-
-override_dh_auto_configure:
-	echo $(series)
-ifeq ($(series),vivid)
-	cp -a debian/control.vivid debian/control
-endif
-	dh_auto_configure
