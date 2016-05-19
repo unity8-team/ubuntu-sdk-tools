@@ -1,0 +1,27 @@
+Source: ubuntu-sdk-tools
+Section: devel
+Priority: optional
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Build-Depends: debhelper (>= 9),
+               dh-golang,
+               dh-python,
+               golang-go,
+               golang-websocket-dev,
+               golang-yaml.v2-dev,
+               python-setuptools,
+               python3-all,
+               python3-setuptools,
+Standards-Version: 3.9.7
+Homepage: https://launchpad.net/ubuntu-sdk-tools
+Vcs-Browser: https://bazaar.launchpad.net/~ubuntu-sdk-team/ubuntu-sdk-tools/trunk/files
+Vcs-Bzr: lp:ubuntu-sdk-tools
+XS-Go-Import-Path: launchpad.net/ubuntu-sdk-tools
+
+Package: usdk-scope-runner
+Architecture: all
+Depends: python3,
+         ${misc:Depends},
+         ${python3:Depends},
+Description: Scope launcher helper for the Ubuntu SDK IDE
+ Implements a helper for the Ubuntu SDK IDE to execute Scopes in runtime
+ targets.
