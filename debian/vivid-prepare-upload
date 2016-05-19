@@ -1,8 +1,11 @@
 #!/bin/sh
 
 # Author: Timo Jyrinki <timo.jyrinki@canonical.com>
+# 
 # Run this script to create a package targetting vivid, containing only the 
-# python script.
+# python script. Start with dgetting existing xenial or yakkety package.
+# You could also run this in bazaar branch after merging the xenial/yakkety 
+# release to trunk.
 
 sed -i "1 s/ubuntu\([0-9]\+\)/ubuntu\1~vivid1/" debian/changelog
 sed -i "1 s/UNRELEASED/vivid/" debian/changelog
