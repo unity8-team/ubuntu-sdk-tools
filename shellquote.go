@@ -13,8 +13,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Ported from shellescape Python library: https://github.com/chrissimpkins/shellescape
  * Author: Benjamin Zeller <benjamin.zeller@canonical.com>
+ *
+ * Ported from shellescape Python library: https://github.com/chrissimpkins/shellescape
+ * Author: Chris Simpkins
  */
 package ubuntu_sdk_tools
 

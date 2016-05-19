@@ -14,6 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Benjamin Zeller <benjamin.zeller@canonical.com>
+ *
+ * Based on the LXD lxc client. Copyright holders:
+ * Author: Chris Glass
+ * Author: Gustavo Niemeyer
+ * Author: Jeroen Simonetti
+ * Author: Matt Morrison
+ * Author: René Jochum
+ * Author: Serge Hallyn
+ * Author: Stéphane Graber
+ * Author: Tycho Andersen
  */
 package main
 

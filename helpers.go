@@ -14,6 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Benjamin Zeller <benjamin.zeller@canonical.com>
+ *
+ * Based on the LXD lxc client. Copyright Holders:
+ * Author: Gustavo Niemeyer
+ * Author: Stéphane Graber
+ * Author: Tycho Andersen
+ * Author: Joshua Griffiths
  */
 package ubuntu_sdk_tools
 
@@ -66,6 +72,10 @@ func EnsureLXDInitializedOrDie() {
 
 	//if we reached this place lets register a new remote
 	defaultImageRemote := "https://sdk-images.canonical.com"
+	if (len(os.Getenv("USDK_USE_TEST_REMOTE")) != 0) {
+		defaultImageRemote = "https://people.canonical.com/~zbenjamin"
+	}
+
 	defaultRemoteName  := "ubuntu-sdk-images"
 	remotes := config.Remotes
 	sdkRem, ok := remotes[defaultRemoteName]
