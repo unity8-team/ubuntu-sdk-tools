@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"encoding/json"
 	"time"
+	"strings"
 )
 
 type imageDesc struct {
@@ -63,7 +64,30 @@ func (c *imagesCmd) run(args []string) error {
 
 	imageDescs := make([]imageDesc, len(images))
 	for idx, image := range images {
-		imageDescs[idx].Alias = image.Aliases[0].Name
+		if len(image.Aliases) == 0 {
+			continue
+		}
+
+		alias := ""
+		for _, tAl := range image.Aliases {
+
+			if !strings.HasPrefix(tAl.Name, "ubuntu-sdk") {
+				continue
+			}
+
+			slashIdx := strings.LastIndex(tAl.Name, "/")
+			if (slashIdx <= 0){
+				continue
+			}
+			alias = tAl.Name[0:slashIdx]
+			break
+		}
+
+		if len(alias) == 0 {
+			continue
+		}
+
+		imageDescs[idx].Alias = alias
 		imageDescs[idx].Arch  = image.Architecture
 		imageDescs[idx].Description = image.Properties["description"]
 		imageDescs[idx].Fingerprint = image.Fingerprint
