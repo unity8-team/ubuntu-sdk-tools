@@ -5,8 +5,6 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper (>= 9),
                dh-golang,
                dh-python,
-               golang-github-lxc-lxd-dev,
-               golang-github-pborman-uuid-dev,
                golang-go,
                golang-websocket-dev,
                golang-yaml.v2-dev,
@@ -18,24 +16,6 @@ Homepage: https://launchpad.net/ubuntu-sdk-tools
 Vcs-Browser: https://bazaar.launchpad.net/~ubuntu-sdk-team/ubuntu-sdk-tools/trunk/files
 Vcs-Bzr: lp:ubuntu-sdk-tools
 XS-Go-Import-Path: launchpad.net/ubuntu-sdk-tools
-
-Package: ubuntu-sdk-tools
-Architecture: any
-Built-Using: ${misc:Built-Using}
-Depends: ${misc:Depends},
-         ${shlibs:Depends},
-Description: Ubuntu SDK CLI tools to control build targets.
- This package includes CLI tools to control build targets for Ubuntu SDK.
- Currently it has two binaries, usdk-target and usdk-wrapper.
-
-Package: golang-launchpad-ubuntu-sdk-tools-dev
-Architecture: all
-Depends: golang-go,
-         pkg-config,
-         ${misc:Depends},
-         ${shlibs:Depends},
-Description: Ubuntu SDK CLI tools - go source
- The Go source files for Ubuntu SDK CLI tools.
 
 Package: usdk-scope-runner
 Architecture: all
