@@ -18,7 +18,9 @@ XS-Go-Import-Path: launchpad.net/ubuntu-sdk-tools
 Package: ubuntu-sdk-tools
 Architecture: any
 Built-Using: ${misc:Built-Using}
-Depends: ${misc:Depends},
+Depends: lxd,
+         lxd-client,
+         ${misc:Depends},
          ${shlibs:Depends},
 Description: Ubuntu SDK CLI tools to control build targets.
  This package includes CLI tools to control build targets for Ubuntu SDK.
