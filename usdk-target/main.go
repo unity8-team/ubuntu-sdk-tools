@@ -61,6 +61,7 @@ var commands = map[string]command{
 	"upgrade": &upgradeCmd{},
 	"initialized": &initializedCmd{},
 	"autosetup": &autosetupCmd{},
+	"autofix": &autofixCmd{},
 }
 
 func main() {

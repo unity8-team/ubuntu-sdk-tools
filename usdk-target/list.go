@@ -27,12 +27,6 @@ import (
 type listCmd struct {
 }
 
-type clickContainer struct {
-	Name string `json:"name"`
-	Architecture string `json:"architecture"`
-	Framework string `json:"framework"`
-}
-
 func (c *listCmd) usage() string {
 	return (
 		`Lists the existing SDK build targets.
@@ -51,27 +45,9 @@ func (c *listCmd) run(args []string) error {
 		return err
 	}
 
-	ctslist, err := d.ListContainers()
+	clickTargets, err := ubuntu_sdk_tools.FindClickTargets(d)
 	if err != nil {
-		return err
-	}
-
-	clickTargets := []clickContainer{}
-
-	for _, cInfo := range ctslist {
-
-		cConf := cInfo.Config
-		clickArch, ok := cConf["user.click-architecture"]
-		if !ok {
-			continue
-		}
-
-		clickFW, ok := cConf["user.click-framework"]
-		if !ok {
-			continue
-		}
-
-		clickTargets = append(clickTargets, clickContainer{Name:cInfo.Name, Architecture: clickArch, Framework: clickFW})
+		return nil
 	}
 
 	data, err := json.Marshal(clickTargets)

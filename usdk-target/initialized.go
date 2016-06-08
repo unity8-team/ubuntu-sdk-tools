@@ -26,9 +26,18 @@ import (
 	"strings"
 	"launchpad.net/ubuntu-sdk-tools"
 	"github.com/lxc/lxd"
+	"github.com/lxc/lxd/shared/gnuflag"
+)
+
+const (
+	ERR_NO_ACCESS    = 255
+	ERR_NEEDS_FIXING = 254
+	ERR_NO_BRIDGE    = 253
+	//ERR_UNKNOWN      = 200
 )
 
 type initializedCmd struct {
+	ignoreBridgeCheck bool
 }
 
 func (c *initializedCmd) usage() string {
@@ -38,27 +47,42 @@ usdk-target initialized`
 }
 
 func (c *initializedCmd) flags() {
+	gnuflag.BoolVar(&c.ignoreBridgeCheck, "b", false, "Do not check for lxd bridge")
 }
 
 func (c *initializedCmd) run(args []string) error {
-	err := c.lxdBridgeConfigured()
-	if (err != nil) {
-		return err
+
+	if !c.ignoreBridgeCheck {
+		err := c.lxdBridgeConfigured()
+		if (err != nil) {
+			os.Exit(ERR_NO_BRIDGE)
+		}
+		fmt.Println("LXD bridge is configured with a subnet.")
+	} else {
+		fmt.Println("Skipping bridge check.")
 	}
-	fmt.Println("LXD bridge is configured with a subnet.")
 
 	config := ubuntu_sdk_tools.GetConfigOrDie()
 	client, err := lxd.NewClient(config, config.DefaultRemote)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Could not connect to the container backend.\n")
-		os.Exit(255)
+		os.Exit(ERR_NO_ACCESS)
 	}
 
 	_, err = client.ServerStatus()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Could not talk to the container backend.\n")
-		os.Exit(255)
+		os.Exit(ERR_NO_ACCESS)
 	}
+
+	for _,fixable := range ubuntu_sdk_tools.Fixables {
+		fixableErr := fixable.Check(client)
+		if fixableErr != nil {
+			fmt.Printf("Error: %v\n", fixableErr)
+			os.Exit(ERR_NEEDS_FIXING)
+		}
+	}
+
 	fmt.Println("Container backend is ready.")
 	return nil
 }
