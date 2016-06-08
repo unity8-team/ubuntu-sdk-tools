@@ -18,30 +18,35 @@
 package main
 
 import (
-)
-import (
 	"fmt"
 	"os"
 	"launchpad.net/ubuntu-sdk-tools"
+	"github.com/lxc/lxd"
 )
 
-type rootfsCmd struct {
+type autofixCmd struct {
 }
 
-func (c *rootfsCmd) usage() string {
-	return `Shows the path to the root filesystem of a container.
-
-usdk-target rootfs container`
+func (c *autofixCmd) usage() string {
+	return `Automatically fixes problems in the container backends.`
 }
 
-func (c *rootfsCmd) flags() {
+func (c *autofixCmd) flags() {
 }
 
-func (c *rootfsCmd) run(args []string) error {
-	if len(args) < 1 {
-		fmt.Fprint(os.Stderr, c.usage())
-		os.Exit(1)
+func (c *autofixCmd) run(args []string) error {
+	config := ubuntu_sdk_tools.GetConfigOrDie()
+	client, err := lxd.NewClient(config, config.DefaultRemote)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Could not connect to the container backend.\n")
+		os.Exit(ERR_NO_ACCESS)
 	}
-	fmt.Printf(ubuntu_sdk_tools.ContainerRootfs(args[0])+"\n")
+
+	for _, fixable := range ubuntu_sdk_tools.Fixables {
+		err = fixable.Fix(client)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

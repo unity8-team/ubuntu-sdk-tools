@@ -135,7 +135,7 @@ func (c *createCmd) run(args []string) error {
 		}
 	}
 
-	err = os.Chmod(rootfs, 0755)
+	err = os.Chmod(rootfs, ubuntu_sdk_tools.LxdContainerPerm)
 	if err != nil {
 		ubuntu_sdk_tools.RemoveContainerSync(client, c.name)
 		return fmt.Errorf("Failed to make rootfs readable. error: %v.\n",err)

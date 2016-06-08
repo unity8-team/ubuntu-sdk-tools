@@ -35,42 +35,19 @@ import (
 )
 
 const LxdBridgeFile = "/etc/default/lxd-bridge"
+const LxdContainerPerm = 0755
 var globConfig *lxd.Config = nil
+
+type ClickContainer struct {
+	Name string `json:"name"`
+	Architecture string `json:"architecture"`
+	Framework string `json:"framework"`
+}
 
 func EnsureLXDInitializedOrDie() {
 	config := GetConfigOrDie()
 
-	/*
-	client, err := lxd.NewClient(config, config.DefaultRemote)
-
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Could not connect to LXD. Error: %v\n", err)
-		os.Exit(1)
-	}
-
-	/*[26.04 16:33:38] <stgraber> zbenjamin: ok, so about that user.network_mode key.
-	 You may want to query it twice if it's the first LXD query you do as user.network_mode
-	 is set by the init script right after LXD startup, which means that you may be getting the previous (unset)
-	 value if your query is the one which starts LXD.
-	_, _ = client.GetProfileConfig("default")
-	defaultProfile, err := client.GetProfileConfig("default")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Could not query status from LXD. Error: %v\n", err)
-		os.Exit(1)
-	}
-
-	//check if network mode is there and if it is that its not link-local
-	networkMode, ok := defaultProfile["user.network_mode"]
-	if ok {
-		if networkMode == "link-local" {
-			fmt.Fprintf(os.Stderr, "LXD is not set up correctly, please run lxd init to configure a subnet")
-			os.Exit(255)
-		}
-	}
-	*/
-
-
-	//if we reached this place lets register a new remote
+	//let's register a new remote
 	defaultImageRemote := "https://sdk-images.canonical.com"
 	if (len(os.Getenv("USDK_TEST_REMOTE")) != 0) {
 		defaultImageRemote = os.Getenv("USDK_TEST_REMOTE")
@@ -251,4 +228,35 @@ func GetUserConfirmation(question string) (bool) {
 	}
 
 	return answer
+}
+
+func ContainerRootfs (container string) (string) {
+	return shared.VarPath("containers", container, "rootfs")
+}
+
+func FindClickTargets (client *lxd.Client) ([]ClickContainer, error) {
+	ctslist, err := client.ListContainers()
+	if err != nil {
+		return nil, err
+	}
+
+	clickTargets := []ClickContainer{}
+
+	for _, cInfo := range ctslist {
+
+		cConf := cInfo.Config
+		clickArch, ok := cConf["user.click-architecture"]
+		if !ok {
+			continue
+		}
+
+		clickFW, ok := cConf["user.click-framework"]
+		if !ok {
+			continue
+		}
+
+		clickTargets = append(clickTargets, ClickContainer{Name:cInfo.Name, Architecture: clickArch, Framework: clickFW})
+	}
+
+	return clickTargets, nil
 }
