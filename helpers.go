@@ -72,8 +72,8 @@ func EnsureLXDInitializedOrDie() {
 
 	//if we reached this place lets register a new remote
 	defaultImageRemote := "https://sdk-images.canonical.com"
-	if (len(os.Getenv("USDK_USE_TEST_REMOTE")) != 0) {
-		defaultImageRemote = "https://people.canonical.com/~zbenjamin"
+	if (len(os.Getenv("USDK_TEST_REMOTE")) != 0) {
+		defaultImageRemote = os.Getenv("USDK_TEST_REMOTE")
 	}
 
 	defaultRemoteName  := "ubuntu-sdk-images"

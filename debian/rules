@@ -1,6 +1,4 @@
 #!/usr/bin/make -f
 
-export PYBUILD_NAME=usdk-scope-runner
-
 %:
-	dh $@ --buildsystem=golang --with=golang,python3 --fail-missing
+	dh $@ --buildsystem=golang --with=golang --fail-missing
