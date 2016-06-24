@@ -34,7 +34,7 @@ import (
 	"launchpad.net/ubuntu-sdk-tools"
 	"os"
 	"strings"
-	"path/filepath"
+	"regexp"
 )
 
 type createCmd struct {
@@ -49,15 +49,17 @@ func (c *createCmd) usage() string {
 	return `\
 Creates a new Ubuntu SDK build target.
 
-usdk-target create -a ARCHITECTURE -f FRAMEWORK -n NAME -p FINGERPRINT
+usdk-target create -n NAME -p FINGERPRINT
 `
 }
 
 var requiredString = "REQUIRED"
+var baseFWRegexNoMinor = regexp.MustCompile("^(ubuntu-[^-]+-[\\d]{1,2}\\.[\\d]{1,2})-([^-]+)-([^-]+)-([^-]+)?$")
+var baseFWRegexWithMinor = regexp.MustCompile("^(ubuntu-[^-]+-[\\d]{1,2}\\.[\\d]{1,2})(\\.[\\d]+)-([^-]+)-([^-]+)-([^-]+)?$")
 
 func (c *createCmd) flags() {
-	gnuflag.StringVar(&c.architecture, "a", requiredString, "architecture for the chroot")
-	gnuflag.StringVar(&c.framework, "f", requiredString, "framework for the chroot")
+	gnuflag.StringVar(&c.architecture, "a", "", "architecture for the chroot (deprecated)")
+	gnuflag.StringVar(&c.framework, "f", "", "framework for the chroot  (deprecated)")
 	gnuflag.StringVar(&c.fingerprint, "p", requiredString, "sha256 fingerprint of the base image")
 	gnuflag.StringVar(&c.name, "n", requiredString, "name of the container")
 	gnuflag.BoolVar(&c.createSupGroups, "g", false, "Also try to create the users supplementary groups")
@@ -66,7 +68,7 @@ func (c *createCmd) flags() {
 
 
 func (c *createCmd) run(args []string) error {
-	if c.architecture == requiredString || c.framework == requiredString || c.fingerprint == requiredString || c.name == requiredString {
+	if c.fingerprint == requiredString || c.name == requiredString {
 		gnuflag.PrintDefaults()
 		return fmt.Errorf("Missing arguments")
 	}
@@ -76,11 +78,51 @@ func (c *createCmd) run(args []string) error {
 	}
 
 	config := ubuntu_sdk_tools.GetConfigOrDie()
-	client, err := lxd.NewClient(config, config.DefaultRemote)
+	client, err := lxd.NewClient(config, "ubuntu-sdk-images")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Could not connect to the remote LXD server.\n")
+		os.Exit(1)
+	}
+
+	//get image informations
+	images, err := findRelevantImages(client)
+	if err != nil {
+		return err
+	}
+
+	var requestedImage *imageDesc = nil
+	for _, image := range images {
+		if image.Fingerprint == c.fingerprint {
+			requestedImage = &image
+			break
+		}
+	}
+	if requestedImage == nil {
+		return fmt.Errorf("Could not find the requested image fingerprint: %s", c.fingerprint)
+	}
+
+	parts := baseFWRegexNoMinor.FindStringSubmatch(requestedImage.Alias)
+	if len(parts) != 0 {
+		c.framework = parts[1]
+		c.architecture = parts[3]
+	} else {
+		parts := baseFWRegexWithMinor.FindStringSubmatch(requestedImage.Alias)
+		if len(parts) == 0 {
+			return fmt.Errorf("Alias format of image is unsupported: %s\n", requestedImage.Alias)
+		}
+
+		c.framework = parts[1]
+		c.architecture = parts[4]
+	}
+
+
+	fmt.Printf("Creating image with:\nframework: %s\narch: %s\n", c.framework, c.architecture)
+	client, err = lxd.NewClient(config, config.DefaultRemote)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Could not connect to the LXD server.\n")
 		os.Exit(1)
 	}
+
 
 	//name string, imgremote string, image string, profiles *[]string, config map[string]string, ephem bool
 	var prof *[]string
@@ -118,36 +160,15 @@ func (c *createCmd) run(args []string) error {
 		}
 	}
 
-	//make the rootfs readable
-	rootfs := shared.VarPath("containers", c.name)
-
-	fi, err := os.Lstat(rootfs)
-	if err != nil {
-		ubuntu_sdk_tools.RemoveContainerSync(client, c.name)
-		return fmt.Errorf("Failed to make rootfs readable. error: %v.\n",err)
-	}
-
-	if fi.Mode() & os.ModeSymlink == os.ModeSymlink {
-		rootfs, err = filepath.EvalSymlinks(rootfs)
+	for _, fixable := range fixable_set {
+		err = fixable.Fix(client)
 		if err != nil {
 			ubuntu_sdk_tools.RemoveContainerSync(client, c.name)
-			return fmt.Errorf("Failed to make rootfs readable. error: %v.\n",err)
+			return err
 		}
 	}
 
-	err = os.Chmod(rootfs, ubuntu_sdk_tools.LxdContainerPerm)
-	if err != nil {
-		ubuntu_sdk_tools.RemoveContainerSync(client, c.name)
-		return fmt.Errorf("Failed to make rootfs readable. error: %v.\n",err)
-	}
-
 	//add the required devices
-	err = ubuntu_sdk_tools.AddDeviceSync(client, c.name, "dri", "disk", []string{"source=/dev/dri", "path=/dev/dri"})
-	if err != nil {
-		ubuntu_sdk_tools.RemoveContainerSync(client, c.name)
-		return err
-	}
-
 	err = ubuntu_sdk_tools.AddDeviceSync(client, c.name, "tmp", "disk", []string{"source=/tmp", "path=/tmp", "recursive=true"})
 	if err != nil {
 		ubuntu_sdk_tools.RemoveContainerSync(client, c.name)

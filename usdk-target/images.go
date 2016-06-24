@@ -49,17 +49,10 @@ usdk-target images`
 func (c *imagesCmd) flags() {
 }
 
-func (c *imagesCmd) run(args []string) error {
-
-	config := ubuntu_sdk_tools.GetConfigOrDie()
-	d, err := lxd.NewClient(config, "ubuntu-sdk-images")
+func findRelevantImages(client *lxd.Client) ([]imageDesc, error) {
+	images, err := client.ListImages()
 	if err != nil {
-		return err
-	}
-
-	images, err := d.ListImages()
-	if err != nil {
-		return err
+		return nil, err
 	}
 
 	imageDescs := make([]imageDesc, len(images))
@@ -70,7 +63,6 @@ func (c *imagesCmd) run(args []string) error {
 
 		alias := ""
 		for _, tAl := range image.Aliases {
-
 			if !strings.HasPrefix(tAl.Name, "ubuntu-sdk") {
 				continue
 			}
@@ -93,6 +85,22 @@ func (c *imagesCmd) run(args []string) error {
 		imageDescs[idx].Fingerprint = image.Fingerprint
 		imageDescs[idx].Size = image.Size
 		imageDescs[idx].UploadDate = image.UploadDate
+	}
+
+	return imageDescs, nil
+}
+
+func (c *imagesCmd) run(args []string) error {
+
+	config := ubuntu_sdk_tools.GetConfigOrDie()
+	d, err := lxd.NewClient(config, "ubuntu-sdk-images")
+	if err != nil {
+		return err
+	}
+
+	imageDescs, err := findRelevantImages(d)
+	if err != nil {
+		return err
 	}
 
 	js, err := json.Marshal(imageDescs)
