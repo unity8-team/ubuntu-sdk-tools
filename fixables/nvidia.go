@@ -127,7 +127,7 @@ func (c *NvidiaFixable) run(client *lxd.Client, container *shared.ContainerInfo,
 			return fmt.Errorf("Need to write the nvidia loader config file")
 		}
 		fmt.Printf("Writing ld.conf file.\n")
-		err = ioutil.WriteFile(ldLoaderFile, []byte("/usr/lib/nvidia-gl\n"),664)
+		err = ioutil.WriteFile(ldLoaderFile, []byte("/usr/lib/nvidia-gl\n"),0664)
 		if err != nil {
 			return err
 		}
@@ -149,7 +149,6 @@ func (c *NvidiaFixable) run(client *lxd.Client, container *shared.ContainerInfo,
 			}
 		}
 	}
-
 	return nil
 }
 

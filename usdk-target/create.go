@@ -181,6 +181,12 @@ func (c *createCmd) run(args []string) error {
 		return err
 	}
 
+	ubuntu_sdk_tools.UpdateConfigSync(client, c.name)
+	if err != nil {
+		ubuntu_sdk_tools.RemoveContainerSync(client, c.name)
+		return err
+	}
+
 	return nil
 }
 

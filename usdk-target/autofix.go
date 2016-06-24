@@ -57,7 +57,16 @@ func (c *autofixCmd) run(args []string) error {
 		}
 	}
 
-	//TODO reboot all containers
+	targets, err := ubuntu_sdk_tools.FindClickTargets(client)
+	if err != nil {
+		return err
+	}
 
+	for _, target := range targets {
+		err = ubuntu_sdk_tools.UpdateConfigSync(client, target.Name)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

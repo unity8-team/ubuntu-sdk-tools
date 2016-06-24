@@ -179,6 +179,30 @@ func StopContainerSync  (client *lxd.Client, container string) error {
 	return nil
 }
 
+func UpdateConfigSync (client *lxd.Client, container string) error {
+	fmt.Printf("Applying changes to container: %s\n", container)
+	err := StopContainerSync(client, container)
+	if err != nil {
+		return err
+	}
+
+	err = BootContainerSync(client, container)
+	if ( err != nil ) {
+		return err
+	}
+
+	command := []string {
+		"exec", container, "--",
+		"bash", "-c", "rm /etc/ld.so.cache; ldconfig",
+	}
+
+	cmd := exec.Command("lxc", command...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	return cmd.Run()
+}
+
 func AddDeviceSync (client *lxd.Client, container, devname, devtype string, props []string) error{
 	fmt.Printf("Adding device %s to %s: %s %v\n",devname, container, devtype, props)
 	resp, err := client.ContainerDeviceAdd(container, devname, devtype, props)
