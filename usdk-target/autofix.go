@@ -20,9 +20,17 @@ package main
 import (
 	"fmt"
 	"os"
-	"launchpad.net/ubuntu-sdk-tools"
 	"github.com/lxc/lxd"
+	"launchpad.net/ubuntu-sdk-tools"
+	"launchpad.net/ubuntu-sdk-tools/fixables"
 )
+
+var fixable_set = []fixables.Fixable{
+	&fixables.ContainerAccess{},
+	&fixables.DevicesFixable{},
+	&fixables.DRIFixable{},
+	&fixables.NvidiaFixable{},
+}
 
 type autofixCmd struct {
 }
@@ -42,8 +50,20 @@ func (c *autofixCmd) run(args []string) error {
 		os.Exit(ERR_NO_ACCESS)
 	}
 
-	for _, fixable := range ubuntu_sdk_tools.Fixables {
+	for _, fixable := range fixable_set {
 		err = fixable.Fix(client)
+		if err != nil {
+			return err
+		}
+	}
+
+	targets, err := ubuntu_sdk_tools.FindClickTargets(client)
+	if err != nil {
+		return err
+	}
+
+	for _, target := range targets {
+		err = ubuntu_sdk_tools.UpdateConfigSync(client, target.Name)
 		if err != nil {
 			return err
 		}

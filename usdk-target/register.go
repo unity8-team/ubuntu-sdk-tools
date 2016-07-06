@@ -212,6 +212,18 @@ func RegisterUserInContainer (client *lxd.Client, containerName string, userName
 		"-p", shadow.Sp_pwdp,
 	}
 
+	containsVideoGroup := false
+	for _, b := range supplGroups {
+		if b == "video" {
+			containsVideoGroup = true
+			break
+		}
+	}
+
+	if !containsVideoGroup {
+		supplGroups = append(supplGroups, "video")
+	}
+
 	if len(supplGroups) > 0 {
 		command = append(command, "--groups",strings.Join(supplGroups, ","))
 	}

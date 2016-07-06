@@ -42,6 +42,7 @@ type ClickContainer struct {
 	Name string `json:"name"`
 	Architecture string `json:"architecture"`
 	Framework string `json:"framework"`
+	Container shared.ContainerInfo `json:"-"`
 }
 
 func EnsureLXDInitializedOrDie() {
@@ -178,8 +179,32 @@ func StopContainerSync  (client *lxd.Client, container string) error {
 	return nil
 }
 
+func UpdateConfigSync (client *lxd.Client, container string) error {
+	fmt.Printf("Applying changes to container: %s\n", container)
+	err := StopContainerSync(client, container)
+	if err != nil {
+		return err
+	}
+
+	err = BootContainerSync(client, container)
+	if ( err != nil ) {
+		return err
+	}
+
+	command := []string {
+		"exec", container, "--",
+		"bash", "-c", "rm /etc/ld.so.cache; ldconfig",
+	}
+
+	cmd := exec.Command("lxc", command...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	return cmd.Run()
+}
+
 func AddDeviceSync (client *lxd.Client, container, devname, devtype string, props []string) error{
-	fmt.Printf("Adding device %s\n",devname)
+	fmt.Printf("Adding device %s to %s: %s %v\n",devname, container, devtype, props)
 	resp, err := client.ContainerDeviceAdd(container, devname, devtype, props)
 	if err != nil {
 		return err
@@ -188,6 +213,20 @@ func AddDeviceSync (client *lxd.Client, container, devname, devtype string, prop
 	err = client.WaitForSuccess(resp.Operation)
 	if err == nil {
 		fmt.Printf("Device %s added to %s\n", devname, container)
+	}
+	return err
+}
+
+func RemoveDeviceSync (client *lxd.Client, container, devname string) error{
+	fmt.Printf("Removing device %s\n",devname)
+	resp, err := client.ContainerDeviceDelete(container, devname)
+	if err != nil {
+		return err
+	}
+
+	err = client.WaitForSuccess(resp.Operation)
+	if err == nil {
+		fmt.Printf("Device %s removed from %s\n", devname, container)
 	}
 	return err
 }
@@ -255,7 +294,7 @@ func FindClickTargets (client *lxd.Client) ([]ClickContainer, error) {
 			continue
 		}
 
-		clickTargets = append(clickTargets, ClickContainer{Name:cInfo.Name, Architecture: clickArch, Framework: clickFW})
+		clickTargets = append(clickTargets, ClickContainer{Name:cInfo.Name, Architecture: clickArch, Framework: clickFW, Container: cInfo})
 	}
 
 	return clickTargets, nil

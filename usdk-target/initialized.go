@@ -75,7 +75,7 @@ func (c *initializedCmd) run(args []string) error {
 		os.Exit(ERR_NO_ACCESS)
 	}
 
-	for _,fixable := range ubuntu_sdk_tools.Fixables {
+	for _,fixable := range fixable_set {
 		fixableErr := fixable.Check(client)
 		if fixableErr != nil {
 			fmt.Printf("Error: %v\n", fixableErr)
