@@ -42,6 +42,7 @@ type ClickContainer struct {
 	Name string `json:"name"`
 	Architecture string `json:"architecture"`
 	Framework string `json:"framework"`
+	UpdatesEnabled bool `json:"updatesEnabled"`
 	Container shared.ContainerInfo `json:"-"`
 }
 
@@ -273,6 +274,10 @@ func ContainerRootfs (container string) (string) {
 	return shared.VarPath("containers", container, "rootfs")
 }
 
+var ClickArchConfig string = "user.click-architecture"
+var ClickFrameworkConfig string = "user.click-framework"
+var TargetUpgradesConfig string = "user.click-updates-enabled"
+
 func FindClickTargets (client *lxd.Client) ([]ClickContainer, error) {
 	ctslist, err := client.ListContainers()
 	if err != nil {
@@ -284,17 +289,30 @@ func FindClickTargets (client *lxd.Client) ([]ClickContainer, error) {
 	for _, cInfo := range ctslist {
 
 		cConf := cInfo.Config
-		clickArch, ok := cConf["user.click-architecture"]
+		clickArch, ok := cConf[ClickArchConfig]
 		if !ok {
 			continue
 		}
 
-		clickFW, ok := cConf["user.click-framework"]
+		clickFW, ok := cConf[ClickFrameworkConfig]
 		if !ok {
 			continue
 		}
 
-		clickTargets = append(clickTargets, ClickContainer{Name:cInfo.Name, Architecture: clickArch, Framework: clickFW, Container: cInfo})
+		updatesEnabled, ok := cConf[TargetUpgradesConfig]
+		if !ok {
+			updatesEnabled = "false"
+		}
+
+		clickTargets = append(clickTargets,
+			ClickContainer{
+				Name:cInfo.Name,
+				Architecture: clickArch,
+				Framework: clickFW,
+				Container: cInfo,
+				UpdatesEnabled: updatesEnabled == "true",
+			},
+		)
 	}
 
 	return clickTargets, nil
