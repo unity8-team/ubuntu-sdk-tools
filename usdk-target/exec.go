@@ -111,7 +111,6 @@ func (c *execCmd) run(args []string) error {
 
 	os.Stdout.Sync()
 	os.Stderr.Sync()
-	fmt.Printf("%v %v\n", lxc_command, lxc_args)
 	err = syscall.Exec(lxc_command, lxc_args, os.Environ())
 	fmt.Printf("Error: %v\n", err)
 	return nil
