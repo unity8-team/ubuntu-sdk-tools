@@ -43,6 +43,7 @@ type createCmd struct {
 	fingerprint     string
 	name            string
 	createSupGroups bool
+	enableUpdates   bool
 }
 
 func (c *createCmd) usage() string {
@@ -58,8 +59,6 @@ var baseFWRegexNoMinor = regexp.MustCompile("^(ubuntu-[^-]+-[\\d]{1,2}\\.[\\d]{1
 var baseFWRegexWithMinor = regexp.MustCompile("^(ubuntu-[^-]+-[\\d]{1,2}\\.[\\d]{1,2})(\\.[\\d]+)-([^-]+)-([^-]+)-([^-]+)?$")
 
 func (c *createCmd) flags() {
-	gnuflag.StringVar(&c.architecture, "a", "", "architecture for the chroot (deprecated)")
-	gnuflag.StringVar(&c.framework, "f", "", "framework for the chroot  (deprecated)")
 	gnuflag.StringVar(&c.fingerprint, "p", requiredString, "sha256 fingerprint of the base image")
 	gnuflag.StringVar(&c.name, "n", requiredString, "name of the container")
 	gnuflag.BoolVar(&c.createSupGroups, "g", false, "Also try to create the users supplementary groups")
@@ -115,6 +114,12 @@ func (c *createCmd) run(args []string) error {
 		c.architecture = parts[4]
 	}
 
+	if parts[len(parts)-1] == "dev" {
+		c.enableUpdates = true
+	} else {
+		c.enableUpdates = false
+	}
+
 
 	fmt.Printf("Creating image with:\nframework: %s\narch: %s\n", c.framework, c.architecture)
 	client, err = lxd.NewClient(config, config.DefaultRemote)
@@ -131,6 +136,9 @@ func (c *createCmd) run(args []string) error {
 	conf["security.privileged"] = "true"
 	conf["user.click-architecture"] = c.architecture
 	conf["user.click-framework"] = c.framework
+	if c.enableUpdates {
+		conf["user.click-updates-enabled"] = "true"
+	}
 	conf["raw.lxc"] = "lxc.aa_profile = unconfined"
 
 	resp, err := client.Init(c.name, "ubuntu-sdk-images", c.fingerprint, prof, conf, false)
