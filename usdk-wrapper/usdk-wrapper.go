@@ -29,6 +29,7 @@ import (
 	"syscall"
 	"github.com/pborman/uuid"
 	"launchpad.net/ubuntu-sdk-tools"
+	"path"
 )
 
 var container string
@@ -99,10 +100,34 @@ func main()  {
 		os.Exit(1)
 	}
 
+	cmdName := filepath.Base(os.Args[0])
+	cmdArgs := os.Args[1:]
+
+	if (cmdName == "cmake") {
+		helpMode := false
+		for _, opt := range cmdArgs {
+			if (opt == "help") {
+				helpMode = true
+				break
+			}
+		}
+
+		if (!helpMode) {
+			cwd, _ := os.Getwd()
+			if _, err := os.Stat(path.Join(cwd, "CMakeCache.txt")); err == nil {
+				fmt.Printf("-- Removing build artifacts\n")
+				_= os.RemoveAll(path.Join(cwd, "CMakeFiles"))
+				_= os.Remove(path.Join(cwd, "CMakeCache.txt"))
+				_= os.Remove(path.Join(cwd, "cmake_install.cmake"))
+				_= os.Remove(path.Join(cwd, "Makefile"))
+			}
+		}
+	}
+
 	//build the command, sourcing the dotfiles to get a decent shell
 	args := []string{}
-	args = append(args, filepath.Base(os.Args[0]))
-	args = append(args, os.Args[1:]...)
+	args = append(args, cmdName)
+	args = append(args, cmdArgs...)
 
 	//until LXD supports sending signals to processes we need to have a pidfile
 	u1 := uuid.NewUUID()
