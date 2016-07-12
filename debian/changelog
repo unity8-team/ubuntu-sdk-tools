@@ -1,5 +1,5 @@
-ubuntu-sdk-tools (0.5+16.04.20160512-0ubuntu1) UNRELEASED; urgency=medium
+ubuntu-sdk-tools (0.5+16.04.20160712-0ubuntu1) UNRELEASED; urgency=medium
 
   * Initial release
 
- -- Benjamin Zeller <benjamin.zeller@canonical.com>  Mon, 25 Apr 2016 15:13:11 +0200
+ -- Benjamin Zeller <benjamin.zeller@canonical.com>  Tue, 12 Jul 2016 17:04:05 +0200
