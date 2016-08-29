@@ -104,15 +104,18 @@ func main()  {
 	cmdArgs := os.Args[1:]
 
 	if (cmdName == "cmake") {
-		helpMode := false
+		killCache := true
 		for _, opt := range cmdArgs {
-			if (opt == "help") {
-				helpMode = true
+			if (opt == "--help") {
+				killCache = false
+				break
+			} else if (opt == "--build") {
+				killCache = false
 				break
 			}
 		}
 
-		if (!helpMode) {
+		if (killCache) {
 			cwd, _ := os.Getwd()
 			if _, err := os.Stat(path.Join(cwd, "CMakeCache.txt")); err == nil {
 				fmt.Printf("-- Removing build artifacts\n")
