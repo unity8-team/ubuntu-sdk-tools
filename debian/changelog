@@ -1,4 +1,4 @@
-ubuntu-sdk-tools (0.5.3) yakkety; urgency=medium
+ubuntu-sdk-tools (0.6) UNRELEASED; urgency=medium
 
   * Support QtC 4.1
   * Ship dependencies in vendor subdir
