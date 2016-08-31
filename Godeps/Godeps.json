@@ -1,0 +1,25 @@
+{
+	"ImportPath": "launchpad.net/ubuntu-sdk-tools",
+	"GoVersion": "go1.6",
+	"GodepVersion": "v74",
+	"Deps": [
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Rev": "e2e3d8414d0fbae04004f151979f4e27c6747fe7"
+		},
+		{
+			"ImportPath": "github.com/lxc/lxd",
+			"Comment": "lxd-2.0.4",
+			"Rev": "1a6adb0332e8f1da761cf899a92f9b8d8af53268"
+		},
+		{
+			"ImportPath": "github.com/lxc/lxd/shared",
+			"Comment": "lxd-2.0.4",
+			"Rev": "1a6adb0332e8f1da761cf899a92f9b8d8af53268"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "a83829b6f1293c91addabc89d0571c246397bbf4"
+		}
+	]
+}
