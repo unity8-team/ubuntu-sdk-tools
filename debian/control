@@ -4,11 +4,12 @@ Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper (>= 9),
                dh-golang,
-               golang-github-lxc-lxd-dev,
-               golang-github-pborman-uuid-dev,
                golang-go,
-               golang-websocket-dev,
-               golang-yaml.v2-dev,
+# all dependencies are shipped in the vendor subdir, keeping them for reference
+#               golang-github-lxc-lxd-dev,
+#               golang-github-pborman-uuid-dev,
+#               golang-websocket-dev,
+#               golang-yaml.v2-dev,
 Standards-Version: 3.9.7
 Homepage: https://launchpad.net/ubuntu-sdk-tools
 Vcs-Browser: https://bazaar.launchpad.net/~ubuntu-sdk-team/ubuntu-sdk-tools/trunk/files
