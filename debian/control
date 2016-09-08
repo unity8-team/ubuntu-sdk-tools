@@ -23,7 +23,7 @@ Depends: lxd,
          lxd-client,
          ${misc:Depends},
          ${shlibs:Depends},
-Description: Ubuntu SDK CLI tools to control build targets.
+Description: Ubuntu SDK CLI tools to control build targets
  This package includes CLI tools to control build targets for Ubuntu SDK.
  Currently it has two binaries, usdk-target and usdk-wrapper.
 
