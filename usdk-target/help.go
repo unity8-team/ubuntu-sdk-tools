@@ -36,7 +36,7 @@ type helpCmd struct {
 }
 
 func (c *helpCmd) usage() string {
-	return "Presents details on how to use usdk-wrapper."
+	return "Presents details on how to use usdk-target."
 }
 
 func (c *helpCmd) flags() {
@@ -55,7 +55,7 @@ func (c *helpCmd) run(args []string) error {
 		return nil
 	}
 
-	fmt.Println("Usage: usdk-wrapper [subcommand] [options]")
+	fmt.Println("Usage: usdk-target [subcommand] [options]")
 	fmt.Println("Available commands:")
 	var names []string
 	for name := range commands {
