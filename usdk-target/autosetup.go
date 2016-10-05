@@ -21,17 +21,12 @@
 package main
 
 import (
-	"github.com/lxc/lxd/shared/gnuflag"
-	"bytes"
 	"fmt"
-	"strings"
-	"strconv"
-	"os/exec"
-	"io/ioutil"
 	"os"
 	"launchpad.net/ubuntu-sdk-tools"
 	"github.com/lxc/lxd"
 	"github.com/lxc/lxd/shared"
+	"github.com/lxc/lxd/shared/gnuflag"
 )
 
 type autosetupCmd struct {
@@ -85,25 +80,49 @@ func (c *autosetupCmd) run(args []string) error {
 	}
 	fmt.Println("All containers stopped.")
 
-	subnet, err := c.detectSubnet()
-	if err != nil  {
-		return err
-	}
+	fmt.Printf("\nCreating default network bridge .....")
+	initCmd := &initializedCmd{}
 
-	err = c.editLXDBridgeFile(subnet)
+	err = initCmd.lxdBridgeConfigured(client)
 	if err != nil {
-		return err
-	}
+		//empty config
+		config := map[string]string{}
 
-	fmt.Println("\nRestarting services:")
-	cmd := exec.Command("bash", "-c", "dpkg-reconfigure -p critical lxd")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
-		return fmt.Errorf("Restarting the LXD service failed. error: %v", err)
+		bridgeName := "sdkbr0"
+		err := client.NetworkCreate(bridgeName, config)
+		if err != nil {
+			fmt.Print(" FAILED\n")
+			return fmt.Errorf("Creating the bridge failed with: %v", err)
+		}
+
+		profile, err := client.ProfileConfig("default")
+		if err != nil {
+			fmt.Print(" FAILED\n")
+			return fmt.Errorf("Listing the default profile failed with: %v", err)
+		}
+
+		_, eth0ExistsAlready := profile.Devices["eth0"]
+
+		//ok eth0 is already there lets replace it
+		if eth0ExistsAlready {
+			_, err = client.ProfileDeviceDelete("default", "eth0")
+			if err != nil {
+				fmt.Print(" FAILED\n")
+				return fmt.Errorf("Removing eth0 from default profile failed with: %v", err)
+			}
+		}
+
+		props := []string{"nictype=bridged", fmt.Sprintf("parent=%s", bridgeName)}
+		_, err = client.ProfileDeviceAdd("default", "eth0", "nic", props)
+		if err != nil {
+			fmt.Print(" FAILED\n")
+			return fmt.Errorf("Attaching the bridge to the default profile failed with: %v", err)
+		}
+
+		fmt.Println(" DONE")
+	} else {
+		fmt.Println(" SKIPPED")
 	}
-	fmt.Println("..... DONE")
 
 	if len(stoppedContainers) > 0 {
 		fmt.Println("\nStarting previously stopped containers:")
@@ -119,142 +138,5 @@ func (c *autosetupCmd) run(args []string) error {
 
 	}
 
-	return nil
-}
-
-func (c *autosetupCmd) detectSubnet() (string, error) {
-	used := make([]int, 0)
-
-	ipAddrOutput, err := exec.Command("ip", "addr", "show").CombinedOutput()
-	if err != nil {
-		return "", err
-	}
-
-	for _, line := range strings.Split(string(ipAddrOutput), "\n") {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "" {
-			continue
-		}
-
-		columns := strings.Split(trimmed, " ")
-
-		if len(columns) < 2 {
-			return "", fmt.Errorf("invalid ip addr output line %s", line)
-		}
-
-		if columns[0] != "inet" {
-			continue
-		}
-
-		addr := columns[1]
-		if !strings.HasPrefix(addr, "10.0.") {
-			continue
-		}
-
-		tuples := strings.Split(addr, ".")
-		if len(tuples) < 4 {
-			return "", fmt.Errorf("invalid ip addr %s", addr)
-		}
-
-		subnet, err := strconv.Atoi(tuples[2])
-		if err != nil {
-			return "", err
-		}
-
-		used = append(used, subnet)
-	}
-
-	curr := 1
-	for {
-		isUsed := false
-		for _, subnet := range used {
-			if subnet == curr {
-				isUsed = true
-				break
-			}
-		}
-		if !isUsed {
-			break
-		}
-
-		curr++
-		if curr > 254 {
-			return "", fmt.Errorf("No valid subnet available")
-		}
-	}
-
-	return fmt.Sprintf("%d", curr), nil
-}
-
-func (c *autosetupCmd) editLXDBridgeFile(subnet string) error {
-	buffer := bytes.Buffer{}
-
-	f, err := os.OpenFile(ubuntu_sdk_tools.LxdBridgeFile,  os.O_RDWR, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	data, err := ioutil.ReadAll(f)
-	if err != nil {
-		return err
-	}
-
-	input := string(data)
-	newValues := map[string]string{
-		"USE_LXD_BRIDGE":      "true",
-		"EXISTING_BRIDGE":     "",
-		"LXD_BRIDGE":          "lxdbr0",
-		"LXD_IPV4_ADDR":       fmt.Sprintf("10.0.%s.1", subnet),
-		"LXD_IPV4_NETMASK":    "255.255.255.0",
-		"LXD_IPV4_NETWORK":    fmt.Sprintf("10.0.%s.1/24", subnet),
-		"LXD_IPV4_DHCP_RANGE": fmt.Sprintf("10.0.%s.2,10.0.%s.254", subnet, subnet),
-		"LXD_IPV4_DHCP_MAX":   "253",
-		"LXD_IPV4_NAT":        "true",
-		"LXD_IPV6_PROXY":      "false",
-	}
-	found := map[string]bool{}
-
-	for _, line := range strings.Split(input, "\n") {
-		out := line
-
-		if !strings.HasPrefix(line, "#") {
-			for prefix, value := range newValues {
-				if strings.HasPrefix(line, prefix + "=") {
-					out = fmt.Sprintf(`%s="%s"`, prefix, value)
-					found[prefix] = true
-					break
-				}
-			}
-		}
-
-		buffer.WriteString(out)
-		buffer.WriteString("\n")
-	}
-
-	for prefix, value := range newValues {
-		if !found[prefix] {
-			buffer.WriteString(prefix)
-			buffer.WriteString("=")
-			buffer.WriteString(value)
-			buffer.WriteString("\n")
-			found[prefix] = true // not necessary but keeps "found" logically consistent
-		}
-	}
-
-	_, err = f.Seek(0, 0)
-	if err != nil {
-		return err
-	}
-
-	err = f.Truncate(0)
-	if err != nil {
-		return err
-	}
-
-	_, err = f.WriteString(buffer.String())
-	if err != nil {
-		return err
-	}
 	return nil
 }

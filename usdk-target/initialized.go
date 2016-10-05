@@ -22,8 +22,6 @@ import (
 import (
 	"fmt"
 	"os"
-	"io/ioutil"
-	"strings"
 	"launchpad.net/ubuntu-sdk-tools"
 	"github.com/lxc/lxd"
 	"github.com/lxc/lxd/shared/gnuflag"
@@ -51,17 +49,6 @@ func (c *initializedCmd) flags() {
 }
 
 func (c *initializedCmd) run(args []string) error {
-
-	if !c.ignoreBridgeCheck {
-		err := c.lxdBridgeConfigured()
-		if (err != nil) {
-			os.Exit(ERR_NO_BRIDGE)
-		}
-		fmt.Println("LXD bridge is configured with a subnet.")
-	} else {
-		fmt.Println("Skipping bridge check.")
-	}
-
 	config := ubuntu_sdk_tools.GetConfigOrDie()
 	client, err := lxd.NewClient(config, config.DefaultRemote)
 	if err != nil {
@@ -73,6 +60,16 @@ func (c *initializedCmd) run(args []string) error {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Could not talk to the container backend.\n")
 		os.Exit(ERR_NO_ACCESS)
+	}
+
+	if !c.ignoreBridgeCheck {
+		err := c.lxdBridgeConfigured(client)
+		if (err != nil) {
+			os.Exit(ERR_NO_BRIDGE)
+		}
+		fmt.Println("LXD bridge is configured with a subnet.")
+	} else {
+		fmt.Println("Skipping bridge check.")
 	}
 
 	for _,fixable := range fixable_set {
@@ -87,48 +84,25 @@ func (c *initializedCmd) run(args []string) error {
 	return nil
 }
 
-func (c *initializedCmd) lxdBridgeConfigured () (error) {
-	f, err := os.Open(ubuntu_sdk_tools.LxdBridgeFile)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	data, err := ioutil.ReadAll(f)
+func (c *initializedCmd) lxdBridgeConfigured (client *lxd.Client) (error) {
+	netConfList, err := client.ListNetworks()
 	if err != nil {
 		return err
 	}
 
-	requiredValues := map[string]string {
-		"USE_LXD_BRIDGE": "",
-		"LXD_IPV4_ADDR": "",
-	}
-
-	for _, line := range strings.Split(string(data), "\n") {
-		if strings.HasPrefix(line, "#") {
+	for _,netConf := range netConfList {
+		if !netConf.Managed || netConf.Type != "bridge" {
 			continue
 		}
 
-		dataSet := strings.Split(line, "=")
-		if len(dataSet) != 2 {
+		if addr, ok := netConf.Config["ipv4.address"]; !ok || addr == "" {
 			continue
 		}
 
-		prefix := strings.TrimSpace(dataSet[0])
-		data   := strings.TrimSpace(dataSet[1])
-		data   = strings.Trim(data,"\"")
-
-		_, ok := requiredValues[prefix]
-		if ok {
-			fmt.Printf("Key %v has value \"%v\".\n",prefix, data)
-			requiredValues[prefix] = data
-		}
-
+		//compatible bridge found
+		return nil
 	}
 
-	if requiredValues["USE_LXD_BRIDGE"] != "true" || requiredValues["LXD_IPV4_ADDR"] == ""{
-		return fmt.Errorf("lxd-bridge not configured")
-	}
-
-	return nil
+	// we found nothing
+	return fmt.Errorf("lxd-bridge not configured")
 }

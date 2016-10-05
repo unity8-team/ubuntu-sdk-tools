@@ -106,7 +106,7 @@ func LogPath(path ...string) string {
 	return filepath.Join(items...)
 }
 
-func ParseLXDFileHeaders(headers http.Header) (uid int, gid int, mode int) {
+func ParseLXDFileHeaders(headers http.Header) (uid int, gid int, mode int, type_ string) {
 	uid, err := strconv.Atoi(headers.Get("X-LXD-uid"))
 	if err != nil {
 		uid = -1
@@ -127,7 +127,15 @@ func ParseLXDFileHeaders(headers http.Header) (uid int, gid int, mode int) {
 		}
 	}
 
-	return uid, gid, mode
+	type_ = headers.Get("X-LXD-type")
+	/* backwards compat: before "type" was introduced, we could only
+	 * manipulate files
+	 */
+	if type_ == "" {
+		type_ = "file"
+	}
+
+	return uid, gid, mode, type_
 }
 
 func ReadToJSON(r io.Reader, req interface{}) error {
@@ -704,6 +712,18 @@ func GetByteSizeString(input int64) string {
 	return fmt.Sprintf("%.2fEB", value)
 }
 
+// RemoveDuplicatesFromString removes all duplicates of the string 'sep'
+// from the specified string 's'.  Leading and trailing occurences of sep
+// are NOT removed (duplicate leading/trailing are).  Performs poorly if
+// there are multiple consecutive redundant separators.
+func RemoveDuplicatesFromString(s string, sep string) string {
+	dup := sep + sep
+	for s = strings.Replace(s, dup, sep, -1); strings.Contains(s, dup); s = strings.Replace(s, dup, sep, -1) {
+
+	}
+	return s
+}
+
 type TransferProgress struct {
 	io.Reader
 	percentage float64
@@ -737,4 +757,13 @@ func (pt *TransferProgress) Read(p []byte) (int, error) {
 	}
 
 	return n, err
+}
+
+func RunCommand(name string, arg ...string) error {
+	output, err := exec.Command(name, arg...).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("Failed to run: %s %s: %s", name, strings.Join(arg, " "), strings.TrimSpace(string(output)))
+	}
+
+	return nil
 }

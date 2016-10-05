@@ -141,7 +141,9 @@ func (c *createCmd) run(args []string) error {
 	}
 	conf["raw.lxc"] = "lxc.aa_profile = unconfined"
 
-	resp, err := client.Init(c.name, "ubuntu-sdk-images", c.fingerprint, prof, conf, false)
+	devicesMap := map[string]shared.Device{}
+
+	resp, err := client.Init(c.name, "ubuntu-sdk-images", c.fingerprint, prof, conf, devicesMap, false)
 	if err != nil {
 		return err
 	}
