@@ -81,9 +81,7 @@ var DefaultRemotes = map[string]RemoteConfig{
 
 var DefaultConfig = Config{
 	Remotes:       DefaultRemotes,
-	DefaultRemote: "local",
-	Aliases:       map[string]string{},
-}
+	DefaultRemote: "local"}
 
 // LoadConfig reads the configuration from the config path; if the path does
 // not exist, it returns a default configuration.

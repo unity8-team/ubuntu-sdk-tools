@@ -13,23 +13,51 @@
 		},
 		{
 			"ImportPath": "github.com/lxc/lxd",
-			"Comment": "lxd-2.0.4",
-			"Rev": "1a6adb0332e8f1da761cf899a92f9b8d8af53268"
+			"Comment": "lxd-2.3",
+			"Rev": "48fbe34449699b78c314b4fcf7db5a515357dfea"
 		},
 		{
 			"ImportPath": "github.com/lxc/lxd/shared",
-			"Comment": "lxd-2.0.4",
-			"Rev": "1a6adb0332e8f1da761cf899a92f9b8d8af53268"
+			"Comment": "lxd-2.3",
+			"Rev": "48fbe34449699b78c314b4fcf7db5a515357dfea"
 		},
 		{
 			"ImportPath": "github.com/lxc/lxd/shared/gnuflag",
-			"Comment": "lxd-2.0.4",
-			"Rev": "1a6adb0332e8f1da761cf899a92f9b8d8af53268"
+			"Comment": "lxd-2.3",
+			"Rev": "48fbe34449699b78c314b4fcf7db5a515357dfea"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-colorable",
+			"Comment": "v0.0.6-6-g6c903ff",
+			"Rev": "6c903ff4aa50920ca86087a280590b36b3152b9c"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-isatty",
+			"Rev": "66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8"
 		},
 		{
 			"ImportPath": "github.com/pborman/uuid",
 			"Comment": "v1.0-15-gb984ec7",
 			"Rev": "b984ec7fa9ff9e428bd0cf0abf429384dfbe3e37"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9"
+		},
+		{
+			"ImportPath": "gopkg.in/inconshreveable/log15.v2",
+			"Comment": "v2.11",
+			"Rev": "b105bd37f74e5d9dc7b6ad7806715c7a2b83fd3f"
+		},
+		{
+			"ImportPath": "gopkg.in/inconshreveable/log15.v2/stack",
+			"Comment": "v2.11",
+			"Rev": "b105bd37f74e5d9dc7b6ad7806715c7a2b83fd3f"
+		},
+		{
+			"ImportPath": "gopkg.in/inconshreveable/log15.v2/term",
+			"Comment": "v2.11",
+			"Rev": "b105bd37f74e5d9dc7b6ad7806715c7a2b83fd3f"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
