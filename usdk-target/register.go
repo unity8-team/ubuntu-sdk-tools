@@ -87,10 +87,10 @@ func userFromEnv () (*string, error) {
 		if len(env) == 0 {
 			return nil, nil
 		}
-		print(env+"\n")
+		fmt.Printf("%s\n", env)
 	}
 
-	print(env+"\n")
+	fmt.Printf("%s\n", env)
 
 	user, err := user.LookupId(env)
 	if err != nil {
@@ -166,7 +166,7 @@ func RegisterUserInContainer (client *lxd.Client, containerName string, userName
 		return fmt.Errorf("Failed to mount home directory of the user: %s. error: %v", *userName, err)
 	}
 
-	print ("Creating groups\n")
+	fmt.Printf("Creating groups\n")
 	var supplGroups []string
 	for _, group := range requiredGroups {
 		mustWork := group.Gid == pw.Gid
