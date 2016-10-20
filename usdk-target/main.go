@@ -66,6 +66,7 @@ var commands = map[string]command{
 }
 
 func main() {
+	os.Setenv("LXD_DIR", "/var/snap/lxd/common/lxd")
 	if err := run(); err != nil {
 		// The action we take depends on the error we get.
 		msg := fmt.Sprintf("error: %v", err)

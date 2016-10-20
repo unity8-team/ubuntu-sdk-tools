@@ -166,6 +166,11 @@ func RegisterUserInContainer (client *lxd.Client, containerName string, userName
 		return fmt.Errorf("Failed to mount home directory of the user: %s. error: %v", *userName, err)
 	}
 
+	lxc_command, err := ubuntu_sdk_tools.FindLxc()
+	if err != nil {
+		return err
+	}
+
 	fmt.Printf("Creating groups\n")
 	var supplGroups []string
 	for _, group := range requiredGroups {
@@ -173,7 +178,7 @@ func RegisterUserInContainer (client *lxd.Client, containerName string, userName
 
 		fmt.Printf("Creating group %s\n", group.Name)
 
-		cmd := exec.Command("lxc", "exec", containerName, "--", "groupadd", "-g",  strconv.FormatUint(uint64(group.Gid),10), group.Name)
+		cmd := exec.Command(lxc_command, "exec", containerName, "--", "groupadd", "-g",  strconv.FormatUint(uint64(group.Gid),10), group.Name)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err = cmd.Start()
@@ -230,7 +235,7 @@ func RegisterUserInContainer (client *lxd.Client, containerName string, userName
 
 	command = append(command,pw.LoginName)
 
-	cmd := exec.Command("lxc", command...)
+	cmd := exec.Command(lxc_command, command...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 

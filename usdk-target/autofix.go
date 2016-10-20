@@ -28,8 +28,8 @@ import (
 var fixable_set = []fixables.Fixable{
 	&fixables.ContainerAccess{},
 	&fixables.DevicesFixable{},
-	&fixables.DRIFixable{},
-	&fixables.NvidiaFixable{},
+	// &fixables.DRIFixable{},
+	// &fixables.NvidiaFixable{},
 }
 
 type autofixCmd struct {

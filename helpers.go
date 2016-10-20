@@ -62,8 +62,10 @@ func EnsureLXDInitializedOrDie() {
 		if sdkRem.Addr == defaultImageRemote {
 			return
 		} else {
-			cmd := exec.Command("lxc", "remote", "remove", defaultRemoteName)
-			err := cmd.Run()
+			command := []string {
+				"remote", "remove", defaultRemoteName,
+			}
+			err := ExecLxc(command)
 			if (err != nil) {
 				fmt.Fprintf(os.Stderr, "Could not remove the remote "+defaultRemoteName+". error: %v\n", err)
 				fmt.Fprintf(os.Stderr, "Please remove it manually.\n", err)
@@ -72,8 +74,10 @@ func EnsureLXDInitializedOrDie() {
 		}
 	}
 
-	cmd := exec.Command("lxc", "remote", "add", "ubuntu-sdk-images", defaultImageRemote, "--accept-certificate", "--protocol=simplestreams")
-	err := cmd.Run()
+	command := []string {
+		"remote", "add", "ubuntu-sdk-images", defaultImageRemote, "--accept-certificate", "--protocol=simplestreams",
+	}
+	err := ExecLxc(command)
 	if (err != nil) {
 		fmt.Fprintf(os.Stderr, "Could not register remote. error: %v\n", err)
 		os.Exit(1)
@@ -180,6 +184,34 @@ func StopContainerSync  (client *lxd.Client, container string) error {
 	return nil
 }
 
+func ExecLxc (arguments []string) (error) {
+	lxc_command, err := FindLxc()
+	if (err != nil) {
+		return err
+	}
+	cmd := exec.Command(lxc_command, arguments...)
+	// cmd.Stdout = os.Stdout
+	// cmd.Stderr = os.Stderr
+
+	return cmd.Run()
+}
+
+func FindLxc () (string, error) {
+	// Try and use lxc from the 'lxd' package in the archive
+	lxc_command, err := exec.LookPath("lxc")
+	if err != nil {
+		// Alternatively lxd from the 'lxd' snap
+		lxc_command, err = exec.LookPath("/snap/lxd/current/bin/lxc")
+		// We can't use the wrapper provided by snapd
+		// lxc_command, err = exec.LookPath("lxd.lxc")
+		if err != nil {
+			lxc_command = ""
+		}
+	}
+	return lxc_command, err
+
+}
+
 func UpdateConfigSync (client *lxd.Client, container string) error {
 	fmt.Printf("Applying changes to container: %s\n", container)
 	err := StopContainerSync(client, container)
@@ -197,11 +229,7 @@ func UpdateConfigSync (client *lxd.Client, container string) error {
 		"bash", "-c", "rm /etc/ld.so.cache; ldconfig",
 	}
 
-	cmd := exec.Command("lxc", command...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	return cmd.Run()
+	return ExecLxc(command)
 }
 
 func AddDeviceSync (client *lxd.Client, container, devname, devtype string, props []string) error{

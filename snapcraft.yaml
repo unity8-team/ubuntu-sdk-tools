@@ -1,0 +1,26 @@
+name: ubuntu-sdk-target
+version: '0.6'
+summary: Lalala
+description: |
+  Snappy SDK tools bla
+
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: devmode # use 'strict' once you have the right plugs and slots
+
+apps:
+    ubuntu-sdk-target:
+        command: usdk-target
+        plugs: [network, network-bind, lxd]
+
+# TODO: cleanbuild fails on this:
+# fatal error: sys/types.h: No such file or directory
+
+parts:
+  ubuntu-sdk-tools:
+    plugin: go
+    go-importpath: launchpad.net/ubuntu-sdk-tools
+    go-packages:
+    # - launchpad.net/ubuntu-sdk-tools/usdk-wrapper
+      - launchpad.net/ubuntu-sdk-tools/usdk-target
+    source: .
+    build-packages: [bzr, gcc]

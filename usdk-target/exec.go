@@ -26,7 +26,6 @@ import (
 	"github.com/lxc/lxd/shared/gnuflag"
 	"launchpad.net/ubuntu-sdk-tools"
 	"syscall"
-	"os/exec"
 )
 
 type execCmd struct {
@@ -64,7 +63,7 @@ func (c *execCmd) run(args []string) error {
 	c.container = args[0]
 	args = args[1:]
 
-	lxc_command, err := exec.LookPath("lxc")
+	lxc_command, err := ubuntu_sdk_tools.FindLxc()
 	if err != nil {
 		return err
 	}
