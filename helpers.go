@@ -30,7 +30,6 @@ import (
 	"os"
 	"fmt"
 	"log"
-	"os/exec"
 	"strings"
 )
 
@@ -56,35 +55,12 @@ func EnsureLXDInitializedOrDie() {
 	}
 
 	defaultRemoteName  := "ubuntu-sdk-images"
-	remotes := config.Remotes
-	sdkRem, ok := remotes[defaultRemoteName]
-	if ok {
-		if sdkRem.Addr == defaultImageRemote {
-			return
-		} else {
-			command := []string {
-				"remote", "remove", defaultRemoteName,
-			}
-			err := ExecLxc(command)
-			if (err != nil) {
-				fmt.Fprintf(os.Stderr, "Could not remove the remote "+defaultRemoteName+". error: %v\n", err)
-				fmt.Fprintf(os.Stderr, "Please remove it manually.\n", err)
-				os.Exit(1)
-			}
-		}
-	}
 
-	command := []string {
-		"remote", "add", "ubuntu-sdk-images", defaultImageRemote, "--accept-certificate", "--protocol=simplestreams",
-	}
-	err := ExecLxc(command)
-	if (err != nil) {
-		fmt.Fprintf(os.Stderr, "Could not register remote. error: %v\n", err)
-		os.Exit(1)
-	}
-
-	//make sure config is loaded again
-	globConfig = nil
+	config.Remotes[defaultRemoteName] = lxd.RemoteConfig{
+		Addr: defaultImageRemote,
+		Static:   true,
+		Public:   true,
+		Protocol: "simplestreams"}
 }
 
 func GetConfigOrDie ()  (*lxd.Config) {
@@ -93,10 +69,7 @@ func GetConfigOrDie ()  (*lxd.Config) {
 		return globConfig
 	}
 
-	configDir := "$HOME/.config/lxc"
-	if os.Getenv("LXD_CONF") != "" {
-		configDir = os.Getenv("LXD_CONF")
-	}
+	configDir := "$XDG_CONFIG_HOME/ubuntu-sdk-target"
 	configPath := os.ExpandEnv(path.Join(configDir, "config.yml"))
 
 	globConfig, err := lxd.LoadConfig(configPath)
@@ -184,34 +157,6 @@ func StopContainerSync  (client *lxd.Client, container string) error {
 	return nil
 }
 
-func ExecLxc (arguments []string) (error) {
-	lxc_command, err := FindLxc()
-	if (err != nil) {
-		return err
-	}
-	cmd := exec.Command(lxc_command, arguments...)
-	// cmd.Stdout = os.Stdout
-	// cmd.Stderr = os.Stderr
-
-	return cmd.Run()
-}
-
-func FindLxc () (string, error) {
-	// Try and use lxc from the 'lxd' package in the archive
-	lxc_command, err := exec.LookPath("lxc")
-	if err != nil {
-		// Alternatively lxd from the 'lxd' snap
-		lxc_command, err = exec.LookPath("/snap/lxd/current/bin/lxc")
-		// We can't use the wrapper provided by snapd
-		// lxc_command, err = exec.LookPath("lxd.lxc")
-		if err != nil {
-			lxc_command = ""
-		}
-	}
-	return lxc_command, err
-
-}
-
 func UpdateConfigSync (client *lxd.Client, container string) error {
 	fmt.Printf("Applying changes to container: %s\n", container)
 	err := StopContainerSync(client, container)
@@ -225,11 +170,11 @@ func UpdateConfigSync (client *lxd.Client, container string) error {
 	}
 
 	command := []string {
-		"exec", container, "--",
 		"bash", "-c", "rm /etc/ld.so.cache; ldconfig",
 	}
 
-	return ExecLxc(command)
+	_, err = client.Exec(container, command, nil, os.Stdin, os.Stdout, os.Stderr, nil, 0, 0)
+	return err
 }
 
 func AddDeviceSync (client *lxd.Client, container, devname, devtype string, props []string) error{

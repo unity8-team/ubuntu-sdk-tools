@@ -23,9 +23,9 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"github.com/lxc/lxd"
 	"github.com/lxc/lxd/shared/gnuflag"
 	"launchpad.net/ubuntu-sdk-tools"
-	"syscall"
 )
 
 type execCmd struct {
@@ -63,14 +63,13 @@ func (c *execCmd) run(args []string) error {
 	c.container = args[0]
 	args = args[1:]
 
-	lxc_command, err := ubuntu_sdk_tools.FindLxc()
+	config := ubuntu_sdk_tools.GetConfigOrDie()
+	d, err := lxd.NewClient(config, config.DefaultRemote)
 	if err != nil {
 		return err
 	}
 
 	lxc_args := []string {
-		lxc_command, "exec",
-		c.container, "--",
 		"su",
 	}
 
@@ -110,7 +109,15 @@ func (c *execCmd) run(args []string) error {
 
 	os.Stdout.Sync()
 	os.Stderr.Sync()
-	err = syscall.Exec(lxc_command, lxc_args, os.Environ())
-	fmt.Printf("Error: %v\n", err)
+	// Ensure the container's running first
+	err = ubuntu_sdk_tools.BootContainerSync(d, c.container)
+	if err != nil {
+		return err
+	}
+	// TODO: controlerHandler for interactive mode
+	_, err = d.Exec(c.container, lxc_args, nil, os.Stdin, os.Stdout, os.Stderr, nil, 0, 0)
+	if err != nil {
+		return err
+	}
 	return nil
 }

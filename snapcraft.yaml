@@ -5,12 +5,16 @@ description: |
   Snappy SDK tools bla
 
 grade: devel # must be 'stable' to release into candidate/stable channels
-confinement: devmode # use 'strict' once you have the right plugs and slots
+confinement: strict
 
 apps:
     ubuntu-sdk-target:
         command: usdk-target
-        plugs: [network, network-bind, lxd]
+        plugs: [network, lxd]
+     # FIXME: lp#1583259
+     #  environment:
+     #      LXD_DIR: /var/snap/lxd/common/lxd
+     #      XDG_CONFIG_HOME: $HOME
 
 # TODO: cleanbuild fails on this:
 # fatal error: sys/types.h: No such file or directory
