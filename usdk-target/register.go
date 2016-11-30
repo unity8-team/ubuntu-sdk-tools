@@ -18,22 +18,21 @@
 package main
 
 import (
-	"errors"
 	"fmt"
-	"os"
-	"github.com/lxc/lxd/shared/gnuflag"
-	"os/user"
-	"launchpad.net/ubuntu-sdk-tools"
-	"os/exec"
-	"syscall"
-	"strings"
 	"github.com/lxc/lxd"
+	"github.com/lxc/lxd/shared/gnuflag"
+	"launchpad.net/ubuntu-sdk-tools"
+	"os"
+	"os/exec"
+	"os/user"
 	"strconv"
+	"strings"
+	"syscall"
 )
 
 type registerCmd struct {
-	user string
-	container string
+	user         string
+	container    string
 	createGroups bool
 }
 
@@ -56,12 +55,12 @@ func (c *registerCmd) flags() {
 }
 
 func (c *registerCmd) run(args []string) error {
-	if (len(args) < 1) {
+	if len(args) < 1 {
 		fmt.Fprint(os.Stderr, c.usage())
 		gnuflag.PrintDefaults()
 		return fmt.Errorf("Missing arguments.")
 	}
-	if (os.Getuid() != 0) {
+	if os.Getuid() != 0 {
 		return fmt.Errorf("This command needs to run as root")
 	}
 
@@ -77,7 +76,7 @@ func (c *registerCmd) run(args []string) error {
 	return RegisterUserInContainer(client, c.container, &c.user, c.createGroups)
 }
 
-func userFromEnv () (*string, error) {
+func userFromEnv() (*string, error) {
 
 	key := "SUDO_UID"
 	env := os.Getenv(key)
@@ -86,12 +85,10 @@ func userFromEnv () (*string, error) {
 		key = "PKEXEC_UID"
 		env = os.Getenv(key)
 		if len(env) == 0 {
-			return nil, errors.New("Neither SUDO_UID nor PKEXEC_UID set")
+			fmt.Fprintf(os.Stderr, "Neither SUDO_UID nor PKEXEC_UID set\n")
+			env = strconv.Itoa(os.Getuid())
 		}
-		fmt.Printf("%s\n", env)
 	}
-
-	fmt.Printf("%s\n", env)
 
 	user, err := user.LookupId(env)
 	if err != nil {
@@ -101,7 +98,7 @@ func userFromEnv () (*string, error) {
 	return &user.Username, nil
 }
 
-func RegisterUserInContainer (client *lxd.Client, containerName string, userName *string, createSupGroups bool) (error) {
+func RegisterUserInContainer(client *lxd.Client, containerName string, userName *string, createSupGroups bool) error {
 	if userName == nil {
 		userNameFromEnv, err := userFromEnv()
 		if err != nil {
@@ -116,12 +113,12 @@ func RegisterUserInContainer (client *lxd.Client, containerName string, userName
 	}
 
 	err := ubuntu_sdk_tools.BootContainerSync(client, containerName)
-	if ( err != nil ) {
+	if err != nil {
 		return err
 	}
 
 	pw, err := ubuntu_sdk_tools.Getpwnam(*userName)
-	if (err != nil) {
+	if err != nil {
 		return fmt.Errorf("Querying the user entry failed. error: %v", err)
 	}
 
@@ -136,8 +133,8 @@ func RegisterUserInContainer (client *lxd.Client, containerName string, userName
 	}
 	*/
 
-	groups,err := ubuntu_sdk_tools.GetGroups()
-	if (err != nil) {
+	groups, err := ubuntu_sdk_tools.GetGroups()
+	if err != nil {
 		return fmt.Errorf("Querying the group entry failed. error: %v", err)
 	}
 
@@ -145,13 +142,13 @@ func RegisterUserInContainer (client *lxd.Client, containerName string, userName
 	for _, group := range groups {
 		if group.Gid == pw.Gid {
 			requiredGroups = append(requiredGroups, group)
-			if (createSupGroups) {
+			if createSupGroups {
 				continue
 			} else {
 				break
 			}
 		}
-		if (createSupGroups) {
+		if createSupGroups {
 			for _, member := range group.Members {
 				if member == *userName {
 					requiredGroups = append(requiredGroups, group)
@@ -161,11 +158,11 @@ func RegisterUserInContainer (client *lxd.Client, containerName string, userName
 		}
 	}
 
-	err = ubuntu_sdk_tools.AddDeviceSync(client,containerName,
+	err = ubuntu_sdk_tools.AddDeviceSync(client, containerName,
 		fmt.Sprintf("home_of_%s", *userName),
 		"disk",
-		[]string{fmt.Sprintf("source=%s",pw.Dir), fmt.Sprintf("path=%s",pw.Dir), "recursive=true"})
-	if (err != nil) {
+		[]string{fmt.Sprintf("source=%s", pw.Dir), fmt.Sprintf("path=%s", pw.Dir), "recursive=true"})
+	if err != nil {
 		return fmt.Errorf("Failed to mount home directory of the user: %s. error: %v", *userName, err)
 	}
 
@@ -176,10 +173,10 @@ func RegisterUserInContainer (client *lxd.Client, containerName string, userName
 
 		fmt.Printf("Creating group %s\n", group.Name)
 
-		args := []string{ "groupadd", "-g",  strconv.FormatUint(uint64(group.Gid),10), group.Name }
+		args := []string{"groupadd", "-g", strconv.FormatUint(uint64(group.Gid), 10), group.Name}
 		_, err := client.Exec(containerName, args, nil, os.Stdin, os.Stdout, os.Stderr, nil, 0, 0)
 		if err != nil {
-			print ("GroupAdd returned error\n")
+			print("GroupAdd returned error\n")
 			if exiterr, ok := err.(*exec.ExitError); ok {
 				if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
 					//exit code of 9 means the group exists already
@@ -203,7 +200,7 @@ func RegisterUserInContainer (client *lxd.Client, containerName string, userName
 
 	fmt.Printf("Creating user %s\n", pw.LoginName)
 
-	command := []string {
+	command := []string{
 		"useradd", "--no-create-home",
 		"-u", strconv.FormatUint(uint64(pw.Uid), 10),
 		"--gid", strconv.FormatUint(uint64(pw.Gid), 10),
@@ -225,10 +222,10 @@ func RegisterUserInContainer (client *lxd.Client, containerName string, userName
 	}
 
 	if len(supplGroups) > 0 {
-		command = append(command, "--groups",strings.Join(supplGroups, ","))
+		command = append(command, "--groups", strings.Join(supplGroups, ","))
 	}
 
-	command = append(command,pw.LoginName)
+	command = append(command, pw.LoginName)
 
 	_, err = client.Exec(containerName, command, nil, os.Stdin, os.Stdout, os.Stderr, nil, 0, 0)
 	return err

@@ -18,41 +18,42 @@
 package fixables
 
 import (
-	"github.com/lxc/lxd/shared"
-	"github.com/lxc/lxd"
-	"os"
 	"fmt"
-	"path/filepath"
+	"github.com/lxc/lxd"
+	"github.com/lxc/lxd/shared"
 	"launchpad.net/ubuntu-sdk-tools"
+	"os"
+	"path/filepath"
 )
 
-type ContainerAccess struct { }
+type ContainerAccess struct{}
+
 func (*ContainerAccess) run(client *lxd.Client, container string, doFix bool) error {
 	targetPath := shared.VarPath("containers", container)
 	fi, err := os.Lstat(targetPath)
 	if err != nil {
-		return fmt.Errorf("Failed to query container access permissions\n",err)
+		return fmt.Errorf("Failed to query container access permissions\n", err)
 	}
 
-	if fi.Mode() & os.ModeSymlink == os.ModeSymlink {
+	if fi.Mode()&os.ModeSymlink == os.ModeSymlink {
 		targetPath, err = filepath.EvalSymlinks(targetPath)
 		if err != nil {
-			return fmt.Errorf("Failed to read rootfs link. error: %v.\n",err)
+			return fmt.Errorf("Failed to read rootfs link. error: %v.\n", err)
 		}
 
 		fi, err = os.Lstat(targetPath)
 		if err != nil {
-			return fmt.Errorf("Failed to query container access permissions\n",err)
+			return fmt.Errorf("Failed to query container access permissions\n", err)
 		}
 	}
 
-	if fi.Mode() != os.ModeDir | ubuntu_sdk_tools.LxdContainerPerm {
+	if fi.Mode() != os.ModeDir|ubuntu_sdk_tools.LxdContainerPerm {
 		if !doFix {
 			return fmt.Errorf("Wrong directory permissions. Container rootfs of %s is not accessible.", container)
 		} else {
 			err = os.Chmod(targetPath, ubuntu_sdk_tools.LxdContainerPerm)
 			if err != nil {
-				return fmt.Errorf("Failed to make container readable. error: %v.\n",err)
+				/* return */ fmt.Errorf("Failed to make container readable. error: %v.\n", err)
 			}
 		}
 
@@ -105,6 +106,6 @@ func (c *ContainerAccess) Fix(client *lxd.Client) error {
 	return nil
 }
 
-func (*ContainerAccess) NeedsRoot () bool {
+func (*ContainerAccess) NeedsRoot() bool {
 	return true
 }

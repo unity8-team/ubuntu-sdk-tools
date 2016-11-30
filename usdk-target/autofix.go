@@ -19,17 +19,17 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"github.com/lxc/lxd"
 	"launchpad.net/ubuntu-sdk-tools"
 	"launchpad.net/ubuntu-sdk-tools/fixables"
+	"os"
 )
 
 var fixable_set = []fixables.Fixable{
 	&fixables.ContainerAccess{},
 	&fixables.DevicesFixable{},
-	// &fixables.DRIFixable{},
-	// &fixables.NvidiaFixable{},
+	&fixables.DRIFixable{},
+	&fixables.NvidiaFixable{},
 }
 
 type autofixCmd struct {

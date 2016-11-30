@@ -33,8 +33,8 @@ import (
 	"github.com/lxc/lxd/shared/gnuflag"
 	"launchpad.net/ubuntu-sdk-tools"
 	"os"
-	"strings"
 	"regexp"
+	"strings"
 )
 
 type createCmd struct {
@@ -64,8 +64,6 @@ func (c *createCmd) flags() {
 	gnuflag.BoolVar(&c.createSupGroups, "g", false, "Also try to create the users supplementary groups")
 }
 
-
-
 func (c *createCmd) run(args []string) error {
 	if c.fingerprint == requiredString || c.name == requiredString {
 		gnuflag.PrintDefaults()
@@ -73,7 +71,7 @@ func (c *createCmd) run(args []string) error {
 	}
 
 	if os.Getuid() != 0 {
-		return fmt.Errorf("This command needs to run as root")
+		/* return */ fmt.Errorf("This command needs to run as root")
 	}
 
 	config := ubuntu_sdk_tools.GetConfigOrDie()
@@ -120,14 +118,12 @@ func (c *createCmd) run(args []string) error {
 		c.enableUpdates = false
 	}
 
-
 	fmt.Printf("Creating image with:\nframework: %s\narch: %s\n", c.framework, c.architecture)
 	client, err = lxd.NewClient(config, config.DefaultRemote)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Could not connect to the LXD server.\n")
 		os.Exit(1)
 	}
-
 
 	//name string, imgremote string, image string, profiles *[]string, config map[string]string, ephem bool
 	var prof *[]string

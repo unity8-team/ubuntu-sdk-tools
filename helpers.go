@@ -24,25 +24,26 @@
 package ubuntu_sdk_tools
 
 import (
+	"fmt"
 	"github.com/lxc/lxd"
 	"github.com/lxc/lxd/shared"
-	"path"
-	"os"
-	"fmt"
 	"log"
+	"os"
+	"path"
 	"strings"
 )
 
 const LxdBridgeFile = "/etc/default/lxd-bridge"
 const LxdContainerPerm = 0755
+
 var globConfig *lxd.Config = nil
 
 type ClickContainer struct {
-	Name string `json:"name"`
-	Architecture string `json:"architecture"`
-	Framework string `json:"framework"`
-	UpdatesEnabled bool `json:"updatesEnabled"`
-	Container shared.ContainerInfo `json:"-"`
+	Name           string               `json:"name"`
+	Architecture   string               `json:"architecture"`
+	Framework      string               `json:"framework"`
+	UpdatesEnabled bool                 `json:"updatesEnabled"`
+	Container      shared.ContainerInfo `json:"-"`
 }
 
 func EnsureLXDInitializedOrDie() {
@@ -50,20 +51,20 @@ func EnsureLXDInitializedOrDie() {
 
 	//let's register a new remote
 	defaultImageRemote := "https://sdk-images.canonical.com"
-	if (len(os.Getenv("USDK_TEST_REMOTE")) != 0) {
+	if len(os.Getenv("USDK_TEST_REMOTE")) != 0 {
 		defaultImageRemote = os.Getenv("USDK_TEST_REMOTE")
 	}
 
-	defaultRemoteName  := "ubuntu-sdk-images"
+	defaultRemoteName := "ubuntu-sdk-images"
 
 	config.Remotes[defaultRemoteName] = lxd.RemoteConfig{
-		Addr: defaultImageRemote,
+		Addr:     defaultImageRemote,
 		Static:   true,
 		Public:   true,
 		Protocol: "simplestreams"}
 }
 
-func GetConfigOrDie ()  (*lxd.Config) {
+func GetConfigOrDie() *lxd.Config {
 
 	if globConfig != nil {
 		return globConfig
@@ -94,10 +95,19 @@ func GetConfigOrDie ()  (*lxd.Config) {
 		}
 	}
 
+	_, err = lxd.NewClient(globConfig, globConfig.DefaultRemote)
+	if err != nil {
+		os.Setenv("LXD_DIR", "/var/snap/lxd/common/lxd")
+		_, err = lxd.NewClient(globConfig, globConfig.DefaultRemote)
+		if err != nil {
+			log.Fatal("Can't establish a working socket connection: %s", err)
+		}
+	}
+
 	return globConfig
 }
 
-func BootContainerSync (client *lxd.Client, name string) error {
+func BootContainerSync(client *lxd.Client, name string) error {
 	current, err := client.ContainerInfo(name)
 	if err != nil {
 		return err
@@ -114,7 +124,6 @@ func BootContainerSync (client *lxd.Client, name string) error {
 		action = shared.Unfreeze
 	}
 
-
 	resp, err := client.Action(name, action, 10, false, false)
 	if err != nil {
 		return err
@@ -130,7 +139,7 @@ func BootContainerSync (client *lxd.Client, name string) error {
 	return nil
 }
 
-func StopContainerSync  (client *lxd.Client, container string) error {
+func StopContainerSync(client *lxd.Client, container string) error {
 	ct, err := client.ContainerInfo(container)
 	if err != nil {
 		return err
@@ -157,7 +166,7 @@ func StopContainerSync  (client *lxd.Client, container string) error {
 	return nil
 }
 
-func UpdateConfigSync (client *lxd.Client, container string) error {
+func UpdateConfigSync(client *lxd.Client, container string) error {
 	fmt.Printf("Applying changes to container: %s\n", container)
 	err := StopContainerSync(client, container)
 	if err != nil {
@@ -165,11 +174,11 @@ func UpdateConfigSync (client *lxd.Client, container string) error {
 	}
 
 	err = BootContainerSync(client, container)
-	if ( err != nil ) {
+	if err != nil {
 		return err
 	}
 
-	command := []string {
+	command := []string{
 		"bash", "-c", "rm /etc/ld.so.cache; ldconfig",
 	}
 
@@ -177,8 +186,8 @@ func UpdateConfigSync (client *lxd.Client, container string) error {
 	return err
 }
 
-func AddDeviceSync (client *lxd.Client, container, devname, devtype string, props []string) error{
-	fmt.Printf("Adding device %s to %s: %s %v\n",devname, container, devtype, props)
+func AddDeviceSync(client *lxd.Client, container, devname, devtype string, props []string) error {
+	fmt.Printf("Adding device %s to %s: %s %v\n", devname, container, devtype, props)
 	resp, err := client.ContainerDeviceAdd(container, devname, devtype, props)
 	if err != nil {
 		return err
@@ -191,8 +200,8 @@ func AddDeviceSync (client *lxd.Client, container, devname, devtype string, prop
 	return err
 }
 
-func RemoveDeviceSync (client *lxd.Client, container, devname string) error{
-	fmt.Printf("Removing device %s\n",devname)
+func RemoveDeviceSync(client *lxd.Client, container, devname string) error {
+	fmt.Printf("Removing device %s\n", devname)
 	resp, err := client.ContainerDeviceDelete(container, devname)
 	if err != nil {
 		return err
@@ -205,7 +214,7 @@ func RemoveDeviceSync (client *lxd.Client, container, devname string) error{
 	return err
 }
 
-func RemoveContainerSync(client *lxd.Client, container string) (error){
+func RemoveContainerSync(client *lxd.Client, container string) error {
 
 	err := StopContainerSync(client, container)
 	if err != nil {
@@ -220,7 +229,7 @@ func RemoveContainerSync(client *lxd.Client, container string) (error){
 	return client.WaitForSuccess(resp.Operation)
 }
 
-func GetUserConfirmation(question string) (bool) {
+func GetUserConfirmation(question string) bool {
 	var response string
 	responses := map[string]bool{
 		"y": true, "yes": true,
@@ -230,7 +239,7 @@ func GetUserConfirmation(question string) (bool) {
 	ok := false
 	answer := false
 	for !ok {
-		fmt.Print(question+" (yes/no): ")
+		fmt.Print(question + " (yes/no): ")
 		_, err := fmt.Scanln(&response)
 		if err != nil {
 			log.Fatal(err)
@@ -243,7 +252,7 @@ func GetUserConfirmation(question string) (bool) {
 	return answer
 }
 
-func ContainerRootfs (container string) (string) {
+func ContainerRootfs(container string) string {
 	return shared.VarPath("containers", container, "rootfs")
 }
 
@@ -251,7 +260,7 @@ var ClickArchConfig string = "user.click-architecture"
 var ClickFrameworkConfig string = "user.click-framework"
 var TargetUpgradesConfig string = "user.click-updates-enabled"
 
-func FindClickTargets (client *lxd.Client) ([]ClickContainer, error) {
+func FindClickTargets(client *lxd.Client) ([]ClickContainer, error) {
 	ctslist, err := client.ListContainers()
 	if err != nil {
 		return nil, err
@@ -279,10 +288,10 @@ func FindClickTargets (client *lxd.Client) ([]ClickContainer, error) {
 
 		clickTargets = append(clickTargets,
 			ClickContainer{
-				Name:cInfo.Name,
-				Architecture: clickArch,
-				Framework: clickFW,
-				Container: cInfo,
+				Name:           cInfo.Name,
+				Architecture:   clickArch,
+				Framework:      clickFW,
+				Container:      cInfo,
 				UpdatesEnabled: updatesEnabled == "true",
 			},
 		)

@@ -28,14 +28,14 @@
 package main
 
 import (
-	"github.com/lxc/lxd/shared/gnuflag"
-	"os"
-	"strings"
 	"fmt"
-	"syscall"
+	"github.com/lxc/lxd/shared/gnuflag"
+	"launchpad.net/ubuntu-sdk-tools"
 	"net"
 	"net/url"
-	"launchpad.net/ubuntu-sdk-tools"
+	"os"
+	"strings"
+	"syscall"
 )
 
 var errArgs = fmt.Errorf("wrong number of subcommand arguments")
@@ -47,27 +47,26 @@ type command interface {
 }
 
 var commands = map[string]command{
-	"list":   &listCmd{},
-	"help":   &helpCmd{},
-	"create": &createCmd{},
-	"register": &registerCmd{},
-	"rootfs": &rootfsCmd{},
-	"status": &statusCmd{},
-	"exists": &existsCmd{},
-	"maint": &execCmd{maintMode:true},
-	"exec": &execCmd{maintMode:false},
-	"destroy": &destroyCmd{},
-	"images": &imagesCmd{},
-	"upgrade": &upgradeCmd{},
+	"list":        &listCmd{},
+	"help":        &helpCmd{},
+	"create":      &createCmd{},
+	"register":    &registerCmd{},
+	"rootfs":      &rootfsCmd{},
+	"status":      &statusCmd{},
+	"exists":      &existsCmd{},
+	"maint":       &execCmd{maintMode: true},
+	"exec":        &execCmd{maintMode: false},
+	"destroy":     &destroyCmd{},
+	"images":      &imagesCmd{},
+	"upgrade":     &upgradeCmd{},
 	"initialized": &initializedCmd{},
-	"autosetup": &autosetupCmd{},
-	"autofix": &autofixCmd{},
-	"set" : &setCmd{},
+	"autosetup":   &autosetupCmd{},
+	"autofix":     &autofixCmd{},
+	"set":         &setCmd{},
 }
 
 func main() {
-	// FIXME: Set environment variables in snapcraft.yaml
-	os.Setenv("LXD_DIR", "/var/snap/lxd/common/lxd")
+	// FIXME: lp#1583259 Set environment variables in snapcraft.yaml
 	os.Setenv("XDG_CONFIG_HOME", os.ExpandEnv("$HOME"))
 
 	if err := run(); err != nil {
