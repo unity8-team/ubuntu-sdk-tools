@@ -49,11 +49,11 @@ func (*ContainerAccess) run(client *lxd.Client, container string, doFix bool) er
 
 	if fi.Mode() != os.ModeDir|ubuntu_sdk_tools.LxdContainerPerm {
 		if !doFix {
-			return fmt.Errorf("Wrong directory permissions. Container rootfs of %s is not accessible.", container)
+			fmt.Printf("Wrong directory permissions. Container rootfs of %s is not accessible.", container)
 		} else {
 			err = os.Chmod(targetPath, ubuntu_sdk_tools.LxdContainerPerm)
 			if err != nil {
-				/* return */ fmt.Errorf("Failed to make container readable. error: %v.\n", err)
+				fmt.Printf("Failed to make container readable. error: %v.\n", err)
 			}
 		}
 
