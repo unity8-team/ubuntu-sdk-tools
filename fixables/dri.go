@@ -18,15 +18,15 @@
 package fixables
 
 import (
-	"fmt"
 	"github.com/lxc/lxd"
-	"github.com/lxc/lxd/shared"
-	"launchpad.net/ubuntu-sdk-tools"
-	"os"
 	"path/filepath"
+	"launchpad.net/ubuntu-sdk-tools"
+	"github.com/lxc/lxd/shared"
+	"fmt"
+	"os"
 )
 
-type DRIFixable struct{}
+type DRIFixable struct { }
 
 func (*DRIFixable) run(client *lxd.Client, container *shared.ContainerInfo, doFix bool) error {
 	// FIXME: dri device isn't accessible under confinement
@@ -40,14 +40,14 @@ func (*DRIFixable) run(client *lxd.Client, container *shared.ContainerInfo, doFi
 		return err
 	}
 
-	for _, node := range files {
+	for _,node := range files {
 		if !container.Devices.ContainsName(node) {
 			if doFix {
 				muh := container.Name
 				err = ubuntu_sdk_tools.AddDeviceSync(
 					client, muh,
 					node, "unix-char",
-					[]string{fmt.Sprintf("path=%s", node[1:]), "gid=44"},
+					[]string{fmt.Sprintf("path=%s", node[1:]),"gid=44"},
 				)
 				if err != nil {
 					return err
@@ -110,6 +110,6 @@ func (c *DRIFixable) Fix(client *lxd.Client) error {
 	return nil
 }
 
-func (*DRIFixable) NeedsRoot() bool {
+func (*DRIFixable) NeedsRoot () bool {
 	return false
 }
