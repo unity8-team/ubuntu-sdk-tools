@@ -46,13 +46,13 @@ func (*ContainerAccess) run(client *lxd.Client, container string, doFix bool) er
 		}
 	}
 
-	if fi.Mode() != os.ModeDir | ubuntu_sdk_tools.LxdContainerPerm {
+	if os.Getenv("SNAP") == "" && fi.Mode() != os.ModeDir | ubuntu_sdk_tools.LxdContainerPerm {
 		if !doFix {
-			fmt.Printf("Wrong directory permissions. Container rootfs of %s is not accessible.", container)
+			return fmt.Errorf("Wrong directory permissions. Container rootfs of %s is not accessible.", container)
 		} else {
 			err = os.Chmod(targetPath, ubuntu_sdk_tools.LxdContainerPerm)
 			if err != nil {
-				fmt.Printf("Failed to make container readable. error: %v.\n",err)
+				return fmt.Errorf("Failed to make container readable. error: %v.\n",err)
 			}
 		}
 
