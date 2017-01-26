@@ -126,13 +126,6 @@ func RegisterUserInContainer (client *lxd.Client, containerName string, userName
 		return fmt.Errorf("Registering root is not possible")
 	}
 
-	/* FIXME: error while looking up passwd for $USER: permission denied
-	shadow,err := ubuntu_sdk_tools.Getspnam(*userName)
-	if (err != nil) {
-		return fmt.Errorf("Querying the password entry failed. error: %v", err)
-	}
-	*/
-
 	groups,err := ubuntu_sdk_tools.GetGroups()
 	if (err != nil) {
 		return fmt.Errorf("Querying the group entry failed. error: %v", err)
@@ -206,7 +199,15 @@ func RegisterUserInContainer (client *lxd.Client, containerName string, userName
 		"--gid", strconv.FormatUint(uint64(pw.Gid), 10),
 		"--home-dir", pw.Dir,
 		"-s", "/bin/bash",
-		// FIXME: "-p", shadow.Sp_pwdp,
+	}
+
+	if os.Getenv("SNAP") == "" {
+		shadow, err := ubuntu_sdk_tools.Getspnam(*userName)
+		if (err != nil) {
+			return fmt.Errorf("Querying the password entry failed. error: %v", err)
+		}
+		command = append(command, "-p")
+		command = append(command, shadow.Sp_pwdp)
 	}
 
 	containsVideoGroup := false
