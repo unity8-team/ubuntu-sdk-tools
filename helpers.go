@@ -56,10 +56,6 @@ func EnsureLXDInitializedOrDie() {
 
 	defaultRemoteName  := "ubuntu-sdk-images"
 
-	//make sure config is loaded again
-	globConfig = nil
-	//XXX: globConfig needs reloading here?
-
 	config.Remotes[defaultRemoteName] = lxd.RemoteConfig{
 		Addr:     defaultImageRemote,
 		Static:   true,
